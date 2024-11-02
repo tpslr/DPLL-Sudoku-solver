@@ -1,0 +1,1 @@
+// TypeScript types for the native addon will go here
