@@ -1,0 +1,12 @@
+
+struct dpllState {
+    std::vector<uint64_t*> *clauses;
+    uint32_t discardedClausesCount;
+    bool *discardedClauses;
+    bool *visitedLiterals;
+    uint64_t *literals;
+};
+
+bool DPLL(std::vector<uint64_t*>& clauses, uint32_t _valueCount, uint64_t* solution);
+
+bool solve(dpllState &state);
