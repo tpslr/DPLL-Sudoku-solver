@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/DPLL/node_modules/node-addon-api/**",
+                "${workspaceFolder}/DPLL/node_modules/bindings/**",
+                "~/AppData/local/node-gyp/Cache/22.11.0/include/node"
+            ],
+            "defines": [
+                "NAPI_CPP_EXCEPTIONS"
+            ],
+            "windowsSdkVersion": "10.0.22621.0",
+            "compilerPath": "cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "windows-msvc-x64"
+        }
+    ],
+    "version": 4
+}
