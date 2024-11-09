@@ -11,5 +11,8 @@
   "description": "",
   "dependencies": {
     "DPLL": "./DPLL"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0"
   }
 }
