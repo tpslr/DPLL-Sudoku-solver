@@ -48,7 +48,7 @@ inline dpllState copyState(dpllState& state) {
     memcpy(literals, state.literals, value64Count * sizeof(uint64_t));
 
     return {
-        state.clauses, 0, discarded_clauses, visited_literals, literals
+        state.lastLiteral, state.clauses, state.discardedClausesCount, discarded_clauses, visited_literals, literals
     };
 }
 
@@ -59,8 +59,9 @@ inline void cleanupState(dpllState& state) {
 }
 
 inline uint32_t chooseLiteral(dpllState& state) {
-    for (uint32_t i = 0; i < valueCount; ++i) {
-        if (state.visitedLiterals[i]) continue; // literal has been visited already
+    for (uint32_t i = state.lastLiteral; i < valueCount; ++i) {
+        if (state.visitedLiterals[i >> 6] & 1ull << (i & 63)) continue; // literal has been visited already
+        state.lastLiteral = i;
         return i;
     }
     // reached the end of literals, return -1 to signify that
@@ -149,7 +150,7 @@ bool DPLL(std::vector<uint64_t*>& clauses, uint32_t _valueCount, uint64_t* _solu
     uint64_t* literals = new uint64_t[value64Count]();
 
     dpllState dpll = {
-        &clauses, 0, discarded_clauses, visited_literals, literals
+        0, &clauses, 0, discarded_clauses, visited_literals, literals
     };
 
     return solve(dpll);

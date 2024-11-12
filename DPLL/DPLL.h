@@ -1,5 +1,6 @@
 
 struct dpllState {
+    uint32_t lastLiteral;
     std::vector<uint64_t*> *clauses;
     uint32_t discardedClausesCount;
     bool *discardedClauses;
