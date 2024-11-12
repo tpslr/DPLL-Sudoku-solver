@@ -12,10 +12,10 @@ uint64_t* solution;
 
 
 
-void setLiteral(dpllState &state, uint32_t literal, bool value) {
-    state.visitedLiterals[literal] = true;
+inline void setLiteral(dpllState &state, uint32_t literal, bool value) {
     uint32_t base = literal >> 6;
     uint32_t offset = literal & 63;
+    state.visitedLiterals[base] |= 1ull << offset;
     if (value) {
         state.literals[base] |= (((uint64_t)1) << offset);
     }
@@ -40,11 +40,11 @@ void setLiteral(dpllState &state, uint32_t literal, bool value) {
 
 inline dpllState copyState(dpllState& state) {
     bool* discarded_clauses = new bool[clauseCount];
-    bool* visited_literals = new bool[valueCount];
+    uint64_t* visited_literals = new uint64_t[value64Count];
     uint64_t* literals = new uint64_t[value64Count];
 
     memcpy(discarded_clauses, state.discardedClauses, clauseCount);
-    memcpy(visited_literals, state.visitedLiterals, valueCount);
+    memcpy(visited_literals, state.visitedLiterals, value64Count * sizeof(uint64_t));
     memcpy(literals, state.literals, value64Count * sizeof(uint64_t));
 
     return {
@@ -84,6 +84,9 @@ inline void pureLiteralAssign(dpllState &state) {
         }
         for (uint32_t i = 0; i < 64; ++i) {
             if (part * 64 + i >= valueCount) break;
+
+            // don't mess with literals that have already been set
+            if (state.visitedLiterals[part] & (1ull << i)) continue;
             
             if ((isPure0 & (1ull << i)) == 0) {
                 setLiteral(state, part * 64 + i, false);
@@ -146,7 +149,7 @@ bool DPLL(std::vector<uint64_t*>& clauses, uint32_t _valueCount, uint64_t* _solu
     solution = _solution;
 
     bool* discarded_clauses = new bool[clauseCount]();
-    bool* visited_literals = new bool[valueCount]();
+    uint64_t* visited_literals = new uint64_t[value64Count]();
     uint64_t* literals = new uint64_t[value64Count]();
 
     dpllState dpll = {
