@@ -30,8 +30,8 @@ inline void setLiteral(dpllState &state, uint32_t literal, bool value) {
         uint64_t* clause = state.clauses->at(i);
         
         if ((clause[base * 2] & (1ull << offset)) != 0 // clause has literal
-            && (clause[base * 2 + 1] & (1ull << offset)) >> offset != value) { // check clause literal is true (value != clause[literal].negated)
-            state.discardedClauses[literal] = true; // discard clause, since setting this value made it become true
+            && ((clause[base * 2 + 1] & (1ull << offset)) >> offset) != value) { // check clause literal is true (value != clause[literal].negated)
+            state.discardedClauses[i] = true; // discard clause, since setting this value made it become true
             state.discardedClausesCount++;
         }
     }
