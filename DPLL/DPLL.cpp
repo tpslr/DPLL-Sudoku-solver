@@ -85,8 +85,11 @@ inline void pureLiteralAssign(dpllState &state) {
         for (uint32_t i = 0; i < clauseCount; ++i) {
             if (discardedClauses[i]) continue;
             uint64_t* clause = state.clauses->at(i);
-            isPure0 |= clause[part];
-            isPure1 &= clause[part];
+            // skip clauses that don't include anything in this range
+            if (clause[part * 2] == 0) continue;
+
+            isPure0 |= clause[part * 2] & ~clause[part * 2 + 1];
+            isPure1 &= ~clause[part * 2] | ~clause[part * 2 + 1];
         }
         for (uint32_t i = 0; i < 64; ++i) {
             if (part * 64 + i >= valueCount) break;
