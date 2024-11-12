@@ -74,7 +74,7 @@ function setBufferSymbol(buffer: Buffer, bit: number, value: boolean){
     }
 }
 function getBufferSymbol(buffer: Buffer, bit: number){
-    const index = bit >> 4;
+    const index = bit >> 3;
     bit = bit & 7;
     return (buffer[index] & (1 << bit)) >> bit;
 }
