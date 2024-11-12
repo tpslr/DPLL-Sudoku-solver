@@ -4,7 +4,7 @@ struct dpllState {
     std::vector<uint64_t*> *clauses;
     uint32_t discardedClausesCount;
     bool *discardedClauses;
-    bool *visitedLiterals;
+    uint64_t *visitedLiterals;
     uint64_t *literals;
 };
 
