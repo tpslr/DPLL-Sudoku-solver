@@ -31,10 +31,11 @@ async function loadCNF(path: string) {
 
         for (const symbol of line.split(" ")) {
             const negate = symbol.startsWith("-");
-            const symbolNumber = Math.abs(parseInt(symbol));
+            if (symbol === "0") continue;
+            const symbolNumber = Math.abs(parseInt(symbol)) - 1;
 
             const index64 = symbolNumber >> 6 << 6;
-            const start = index64 * 64 * 2;
+            const start = index64 * 2;
             const offset = symbolNumber & 63;
 
             console.log(`${start + offset}, ${start + offset + 64}`);
@@ -54,9 +55,9 @@ async function loadCNF(path: string) {
     let out = "";
     let out2 = "";
     for (let i = 0; i < variables; i++) {
-        console.log(`Var ${i} = ${getBufferSymbol(solution, i)}`);
-        out += `Var ${i} = ${getBufferSymbol(solution, i)}\n`;
-        out2 += `${getBufferSymbol(solution, i) == 0 ? "-" : ""}${i}\n`;
+        console.log(`Var ${i + 1} = ${getBufferSymbol(solution, i)}`);
+        out += `Var ${i + 1} = ${getBufferSymbol(solution, i)}\n`;
+        out2 += `${getBufferSymbol(solution, i) == 0 ? "-" : ""}${i + 1} 0\n`;
     }
     writeFile("out1.txt", out);
     writeFile("out2.txt", out2)
