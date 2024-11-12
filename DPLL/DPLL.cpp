@@ -73,11 +73,17 @@ inline void unitPropagate(dpllState &state) {
 }
 
 inline void pureLiteralAssign(dpllState &state) {
+    // discarded clauses needs to be copied since it can change due to setLiteral
+    // current state is needed since everything looped over in chunks
+    bool *discardedClauses = new bool[clauseCount];
+    memcpy(discardedClauses, state.discardedClauses, clauseCount);
+
     for (uint32_t part = 0; part < value64Count; ++part) {
         uint64_t isPure0 = 0;
         uint64_t isPure1 = (uint64_t)-1;
 
         for (uint32_t i = 0; i < clauseCount; ++i) {
+            if (discardedClauses[i]) continue;
             uint64_t* clause = state.clauses->at(i);
             isPure0 |= clause[part];
             isPure1 &= clause[part];
@@ -99,6 +105,7 @@ inline void pureLiteralAssign(dpllState &state) {
             state.literals[part * 64 + i] = !(isPure0 << i) || (isPure1 << i);*/
         }
     }
+    delete[] discardedClauses;
 }
 
 
