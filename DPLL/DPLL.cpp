@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include <./DPLL.h>
+#include <string.h>
 
 uint32_t clauseCount;
 uint32_t valueCount;
@@ -44,7 +45,7 @@ inline dpllState copyState(dpllState& state) {
 
     memcpy(discarded_clauses, state.discardedClauses, clauseCount);
     memcpy(visited_literals, state.visitedLiterals, valueCount);
-    memcpy(literals, state.literals, value64Count * sizeof uint64_t);
+    memcpy(literals, state.literals, value64Count * sizeof(uint64_t));
 
     return {
         state.clauses, 0, discarded_clauses, visited_literals, literals
@@ -102,7 +103,7 @@ bool solve(dpllState &state) {
     //pureLiteralAssign(state);
 
     if (state.discardedClausesCount == clauseCount) {
-        memcpy(solution, state.literals, value64Count * sizeof uint64_t);
+        memcpy(solution, state.literals, value64Count * sizeof(uint64_t));
         return true;
     }
 
