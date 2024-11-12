@@ -69,7 +69,40 @@ inline uint32_t chooseLiteral(dpllState& state) {
 }
 
 inline void unitPropagate(dpllState &state) {
+    for (uint32_t i = 0; i < clauseCount; ++i) {
+        if (state.discardedClauses[i]) continue; // skip clauses were already discarded
 
+        uint64_t* clause = state.clauses->at(i);
+
+        uint32_t literalCount = 0;
+        uint32_t unitPart = -1;
+        uint32_t unitOffset;
+        for (uint32_t part = 0; part < value64Count; ++part) {
+            // skip clauses that don't include anything in this range
+            if (clause[part * 2] == 0) continue;
+            
+            // all literals that are used in part of clause and aren't set
+            uint64_t missingValues = clause[part * 2] & ~state.visitedLiterals[part];
+
+            uint32_t count = __builtin_popcountll(missingValues);
+            literalCount += count;
+            if (literalCount > 1) {
+                // literal count on this clause is greater than 1
+                unitPart = -1;
+                break;
+            }
+            if (count == 1) {
+                unitPart = part;
+                // the offset will be number of leading zeros
+                unitOffset = __builtin_ctzll(missingValues);
+            }
+        }
+
+        if (literalCount == 1) {
+            bool value = (clause[unitPart * 2 + 1] & (1ull << unitOffset)) == 0 ? true : false;
+            setLiteral(state, unitPart * 64 + unitOffset, value);
+        }
+    }
 }
 
 inline void pureLiteralAssign(dpllState &state) {
@@ -113,8 +146,8 @@ inline void pureLiteralAssign(dpllState &state) {
 
 
 bool solve(dpllState &state) {
-    //unitPropagate(state);
-    //pureLiteralAssign(state);
+    unitPropagate(state);
+    pureLiteralAssign(state);
 
     if (state.discardedClausesCount == clauseCount) {
         memcpy(solution, state.literals, value64Count * sizeof(uint64_t));
