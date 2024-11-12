@@ -15,6 +15,28 @@
                 "showReuseMessage": true,
                 "clear": false
             }
+        },
+        {
+            "label": "build DPLL (debug)",
+            "command": "npm",
+            "args": ["run", "build-debug"],
+            "options": {
+                "cwd": "${workspaceFolder}/DPLL",
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            }
+        },
+        {
+            "label": "tsc watch",
+            "command": "tsc",
+            "args": ["--watch"],
+            "isBackground": true,
         }
     ]
 }
