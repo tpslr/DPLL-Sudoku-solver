@@ -17,6 +17,7 @@ bool* pureLiteralClauseDiscardCache;
 inline void setLiteral(dpllState &state, uint32_t literal, bool value) {
     uint32_t base = literal >> 6;
     uint32_t offset = literal & 63;
+if (state.visitedLiterals[base] & (1ull << offset)) return;
     state.visitedLiterals[base] |= 1ull << offset;
     if (value) {
         state.literals[base] |= (((uint64_t)1) << offset);
