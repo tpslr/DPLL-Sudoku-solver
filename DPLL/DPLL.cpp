@@ -10,6 +10,8 @@ uint32_t value64Count;
 
 uint64_t* solution;
 
+bool* pureLiteralClauseDiscardCache;
+
 
 
 inline void setLiteral(dpllState &state, uint32_t literal, bool value) {
@@ -39,9 +41,9 @@ inline void setLiteral(dpllState &state, uint32_t literal, bool value) {
 
 
 inline dpllState copyState(dpllState& state) {
-    bool* discarded_clauses = new bool[clauseCount];
-    uint64_t* visited_literals = new uint64_t[value64Count];
-    uint64_t* literals = new uint64_t[value64Count];
+    bool* discarded_clauses = (bool*)malloc(clauseCount);
+    uint64_t* visited_literals = (uint64_t*)malloc(value64Count * sizeof(uint64_t));
+    uint64_t* literals = (uint64_t*)malloc(value64Count * sizeof(uint64_t));
 
     memcpy(discarded_clauses, state.discardedClauses, clauseCount);
     memcpy(visited_literals, state.visitedLiterals, value64Count * sizeof(uint64_t));
@@ -50,6 +52,16 @@ inline dpllState copyState(dpllState& state) {
     return {
         state.lastLiteral, state.clauses, state.discardedClausesCount, discarded_clauses, visited_literals, literals
     };
+}
+// Copy state from source to an existing destination state
+inline void copyState(dpllState& source, dpllState &destination) {
+    memcpy(destination.discardedClauses, source.discardedClauses, clauseCount);
+    memcpy(destination.visitedLiterals, source.visitedLiterals, value64Count * sizeof(uint64_t));
+    memcpy(destination.literals, source.literals, value64Count * sizeof(uint64_t));
+
+    destination.lastLiteral = source.lastLiteral;
+    destination.discardedClausesCount = source.discardedClausesCount;
+    destination.clauses = source.clauses;
 }
 
 inline void cleanupState(dpllState& state) {
@@ -108,15 +120,14 @@ inline void unitPropagate(dpllState &state) {
 inline void pureLiteralAssign(dpllState &state) {
     // discarded clauses needs to be copied since it can change due to setLiteral
     // current state is needed since everything looped over in chunks
-    bool *discardedClauses = new bool[clauseCount];
-    memcpy(discardedClauses, state.discardedClauses, clauseCount);
+    memcpy(pureLiteralClauseDiscardCache, state.discardedClauses, clauseCount);
 
     for (uint32_t part = 0; part < value64Count; ++part) {
         uint64_t isPure0 = 0;
         uint64_t isPure1 = (uint64_t)-1;
 
         for (uint32_t i = 0; i < clauseCount; ++i) {
-            if (discardedClauses[i]) continue;
+            if (pureLiteralClauseDiscardCache[i]) continue;
             uint64_t* clause = state.clauses->at(i);
             // skip clauses that don't include anything in this range
             if (clause[part * 2] == 0) continue;
@@ -161,22 +172,21 @@ bool solve(dpllState &state) {
     }
 
     // check setting literal to false
-    dpllState falseState = copyState(state);
-    setLiteral(falseState, literal, false);
-    if (solve(falseState)) {
-        cleanupState(falseState);
+    dpllState newState = copyState(state);
+    setLiteral(newState, literal, false);
+    if (solve(newState)) {
+        cleanupState(newState);
         return true;
     }
-    cleanupState(falseState);
     
     // check setting literal to false
-    dpllState trueState = copyState(state);
-    setLiteral(trueState, literal, true);
-    if (solve(trueState)) {
-        cleanupState(trueState);
+    copyState(state, newState);
+    setLiteral(newState, literal, true);
+    if (solve(newState)) {
+        cleanupState(newState);
         return true;
     }
-    cleanupState(trueState);
+    cleanupState(newState);
 
     return false;
 }
@@ -194,6 +204,8 @@ bool DPLL(std::vector<uint64_t*>& clauses, uint32_t _valueCount, uint64_t* _solu
     bool* discarded_clauses = new bool[clauseCount]();
     uint64_t* visited_literals = new uint64_t[value64Count]();
     uint64_t* literals = new uint64_t[value64Count]();
+
+    pureLiteralClauseDiscardCache = new bool[clauseCount]();
 
     dpllState dpll = {
         0, &clauses, 0, discarded_clauses, visited_literals, literals
