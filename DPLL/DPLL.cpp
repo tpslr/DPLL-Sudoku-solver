@@ -120,7 +120,8 @@ inline uint32_t chooseLiteral(dpllState& state) {
     return -1;
 }
 
-inline void unitPropagate(dpllState &state) {
+inline bool unitPropagate(dpllState &state) {
+    bool change = false;
     for (uint32_t i = 0; i < clauseCount; ++i) {
         if (state.discardedClauses[i]) continue; // skip clauses were already discarded
 
@@ -153,14 +154,18 @@ inline void unitPropagate(dpllState &state) {
         if (literalCount == 1) {
             bool value = (clause[unitPart * 2 + 1] & (1ull << unitOffset)) == 0 ? true : false;
             setLiteral(state, unitPart * 64 + unitOffset, value);
+            change = true;
         }
     }
+    return change;
 }
 
-inline void pureLiteralAssign(dpllState &state) {
+inline bool pureLiteralAssign(dpllState &state) {
     // discarded clauses needs to be copied since it can change due to setLiteral
     // current state is needed since everything looped over in chunks
     memcpy(pureLiteralClauseDiscardCache, state.discardedClauses, clauseCount);
+
+    bool change = false;
 
     for (uint32_t part = 0; part < value64Count; ++part) {
         uint64_t isPure0 = 0;
@@ -175,8 +180,8 @@ inline void pureLiteralAssign(dpllState &state) {
             isPure0 |= clause[part * 2] & ~clause[part * 2 + 1];
             isPure1 &= ~clause[part * 2] | ~clause[part * 2 + 1];
         }
-        set64False(state, part, isPure0 | state.visitedLiterals[part]);
-        set64True(state, part, isPure1 & ~state.visitedLiterals[part]);
+        change |= set64False(state, part, isPure0 | state.visitedLiterals[part]);
+        change |= set64True(state, part, isPure1 & ~state.visitedLiterals[part]);
         /*for (uint32_t i = 0; i < 64; ++i) {
             if (part * 64 + i >= valueCount) break;
 
@@ -194,13 +199,20 @@ inline void pureLiteralAssign(dpllState &state) {
             state.literals[part * 64 + i] = !(isPure0 << i) || (isPure1 << i);*/
         //}*/
     }
-    delete[] discardedClauses;
+    return change;
 }
 
 
 bool solve(dpllState &state) {
-    unitPropagate(state);
-    pureLiteralAssign(state);
+    bool change = true;
+    while (change) {
+        change = false;
+        // keep doing unit propagation and pure literal assignment in a loop
+        // (with good chances solving for one value makes the next one obvious, so there's no need to recursively guess)
+        // this will technically slow down the algorithm in some cases (doing work once, seeing it doesn't solve it, and then choosing to try that literal later)
+        change |= unitPropagate(state);
+        change |= pureLiteralAssign(state);
+    }
 
     if (state.discardedClausesCount == clauseCount) {
         memcpy(solution, state.literals, value64Count * sizeof(uint64_t));
