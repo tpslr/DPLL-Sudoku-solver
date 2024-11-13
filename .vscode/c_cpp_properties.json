@@ -6,7 +6,8 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/DPLL/node_modules/node-addon-api/**",
                 "${workspaceFolder}/DPLL/node_modules/bindings/**",
-                "~/AppData/local/node-gyp/Cache/22.11.0/include/node"
+                "~/AppData/local/node-gyp/Cache/*/include/node",
+                "~/.cache/node-gyp/*/include/node"
             ],
             "defines": [
                 "NAPI_CPP_EXCEPTIONS"
