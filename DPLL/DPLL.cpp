@@ -39,6 +39,46 @@ inline void setLiteral(dpllState &state, uint32_t literal, bool value) {
     }
 }
 
+inline bool set64True(dpllState &state, uint32_t index, uint64_t value) {
+    if (value == 0) return false;
+    state.visitedLiterals[index] |= value;
+
+    state.literals[index] |= value;
+
+    // discard all clauses that become true by setting value
+    for (uint32_t i = 0; i < clauseCount; ++i) {
+        if (state.discardedClauses[i]) continue; // skip clauses were already discarded
+
+        uint64_t* clause = state.clauses->at(i);
+
+        if (clause[index * 2] & ~clause[index * 2 + 1] & value) {
+            state.discardedClauses[i] = true;
+            state.discardedClausesCount++;
+        }
+    }
+    return true;
+}
+
+inline bool set64False(dpllState &state, uint32_t index, uint64_t value) {
+    if (value == -1ull) return false;
+    state.visitedLiterals[index] |= ~value;
+
+    state.literals[index] &= value;
+
+    // discard all clauses that become true by setting value
+    for (uint32_t i = 0; i < clauseCount; ++i) {
+        if (state.discardedClauses[i]) continue; // skip clauses were already discarded
+
+        uint64_t* clause = state.clauses->at(i);
+
+        if (clause[index * 2] & clause[index * 2 + 1] & ~value) {
+            state.discardedClauses[i] = true;
+            state.discardedClausesCount++;
+        }
+    }
+    return true;
+}
+
 
 inline dpllState copyState(dpllState& state) {
     bool* discarded_clauses = (bool*)malloc(clauseCount);
@@ -135,7 +175,9 @@ inline void pureLiteralAssign(dpllState &state) {
             isPure0 |= clause[part * 2] & ~clause[part * 2 + 1];
             isPure1 &= ~clause[part * 2] | ~clause[part * 2 + 1];
         }
-        for (uint32_t i = 0; i < 64; ++i) {
+        set64False(state, part, isPure0 | state.visitedLiterals[part]);
+        set64True(state, part, isPure1 & ~state.visitedLiterals[part]);
+        /*for (uint32_t i = 0; i < 64; ++i) {
             if (part * 64 + i >= valueCount) break;
 
             // don't mess with literals that have already been set
@@ -150,7 +192,7 @@ inline void pureLiteralAssign(dpllState &state) {
             /*
             state.visitedLiterals[part * 64 + i];
             state.literals[part * 64 + i] = !(isPure0 << i) || (isPure1 << i);*/
-        }
+        //}*/
     }
     delete[] discardedClauses;
 }
