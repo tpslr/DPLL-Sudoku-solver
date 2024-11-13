@@ -1,3 +1,5 @@
+#include <condition_variable>
+#include <thread>
 
 struct dpllState {
     uint32_t lastLiteral;
@@ -11,3 +13,28 @@ struct dpllState {
 bool DPLL(std::vector<uint64_t*>& clauses, uint32_t _valueCount, uint64_t* solution);
 
 bool solve(dpllState &state);
+
+struct SolveResult {
+    uint32_t worker;
+    bool result;
+};
+
+inline SolveResult solve2(dpllState *state, uint32_t literal, bool literalValue);
+inline bool getResult(SolveResult &result);
+
+class Worker {
+    dpllState* state;
+    std::thread* thread;
+    std::condition_variable cv;
+    std::condition_variable doneCv;
+    bool result = false;
+    bool done = false;
+    void main();
+public:
+    Worker();
+    std::mutex mtx;
+    std::mutex runningMtx;
+    bool running = false;
+    void run(dpllState *state);
+    bool getResult();
+};

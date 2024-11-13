@@ -3,21 +3,25 @@
 #include <vector>
 #include <./DPLL.h>
 #include <string.h>
+#include <thread>
 
 uint32_t clauseCount;
 uint32_t valueCount;
 uint32_t value64Count;
 
 uint64_t* solution;
+bool solutionFound;
 
 bool* pureLiteralClauseDiscardCache;
 
+uint32_t workerCount = 30;
+Worker *workers;
 
 
 inline void setLiteral(dpllState &state, uint32_t literal, bool value) {
     uint32_t base = literal >> 6;
     uint32_t offset = literal & 63;
-if (state.visitedLiterals[base] & (1ull << offset)) return;
+    if (state.visitedLiterals[base] & (1ull << offset)) return;
     state.visitedLiterals[base] |= 1ull << offset;
     if (value) {
         state.literals[base] |= (((uint64_t)1) << offset);
@@ -164,7 +168,9 @@ inline bool unitPropagate(dpllState &state) {
 inline bool pureLiteralAssign(dpllState &state) {
     // discarded clauses needs to be copied since it can change due to setLiteral
     // current state is needed since everything looped over in chunks
-    memcpy(pureLiteralClauseDiscardCache, state.discardedClauses, clauseCount);
+
+    bool *cache = (bool*)malloc(clauseCount);
+    memcpy(cache, state.discardedClauses, clauseCount);
 
     bool change = false;
 
@@ -173,7 +179,7 @@ inline bool pureLiteralAssign(dpllState &state) {
         uint64_t isPure1 = (uint64_t)-1;
 
         for (uint32_t i = 0; i < clauseCount; ++i) {
-            if (pureLiteralClauseDiscardCache[i]) continue;
+            if (cache[i]) continue;
             uint64_t* clause = state.clauses->at(i);
             // skip clauses that don't include anything in this range
             if (clause[part * 2] == 0) continue;
@@ -200,6 +206,7 @@ inline bool pureLiteralAssign(dpllState &state) {
             state.literals[part * 64 + i] = !(isPure0 << i) || (isPure1 << i);*/
         //}*/
     }
+    free(cache);
     return change;
 }
 
@@ -216,6 +223,8 @@ bool solve(dpllState &state) {
     }
 
     if (state.discardedClausesCount == clauseCount) {
+        if (solutionFound) return false;
+        solutionFound = true;
         memcpy(solution, state.literals, value64Count * sizeof(uint64_t));
         return true;
     }
@@ -226,24 +235,99 @@ bool solve(dpllState &state) {
         return false;
     }
 
-    // check setting literal to false
-    dpllState newState = copyState(state);
-    setLiteral(newState, literal, false);
-    if (solve(newState)) {
-        cleanupState(newState);
+    /*// check setting literal to false
+    dpllState falseState = copyState(state);
+    setLiteral(falseState, literal, false);
+    if (solve(falseState)) {
+        cleanupState(falseState);
         return true;
     }
     
     // check setting literal to false
-    copyState(state, newState);
-    setLiteral(newState, literal, true);
-    if (solve(newState)) {
-        cleanupState(newState);
+    dpllState trueState = copyState(state);
+    setLiteral(trueState, literal, true);
+    if (solve(trueState)) {
+        cleanupState(trueState);
         return true;
     }
-    cleanupState(newState);
+    cleanupState(trueState);*/
+
+    dpllState falseState = copyState(state);
+    
+    dpllState trueState = copyState(state);
+
+    SolveResult resultFalse = solve2(&falseState, literal, false);
+    SolveResult resultTrue = solve2(&trueState, literal, true);
+
+    if (getResult(resultTrue) || getResult(resultFalse)) {
+        return true;
+    }
 
     return false;
+}
+
+inline bool getResult(SolveResult &result) {
+    if (result.worker == -1u) return result.result;
+    return workers[result.worker].getResult();
+}
+
+inline SolveResult solve2(dpllState *state, uint32_t literal, bool literalValue) {
+    SolveResult result = { -1u, false };
+    setLiteral(*state, literal, literalValue);
+    
+    for (uint32_t i = 0; i < workerCount; i++) {
+        std::lock_guard lock(workers[i].runningMtx);
+        if (!workers[i].running) {
+            workers[i].run(state);
+            result.worker = i;
+            break;
+        }
+    }
+    if (result.worker == -1u) {
+        result.result = solve(*state);
+        cleanupState(*state);
+    }
+    return result;
+}
+
+Worker::Worker() {
+    thread = new std::thread([&]{ main(); });
+    thread->detach();
+}
+
+void Worker::run(dpllState *state) {
+    std::lock_guard<std::mutex> lock(mtx);
+    this->state = state;
+    this->running = true;
+    this->done = false;
+    this->cv.notify_all();
+}
+
+void Worker::main() {
+    std::unique_lock<std::mutex> lock(mtx);
+
+    while (true) {
+        cv.wait(lock, [&]{ return running; });
+        
+        result = solve(*state);
+        cleanupState(*state);
+
+        done = true;
+        doneCv.notify_all();
+
+        cv.wait(lock, [&]{ return !running; });
+    }
+}
+
+bool Worker::getResult() {
+    std::unique_lock<std::mutex> l(mtx);
+    if (!done) doneCv.wait(l, [&]{ return done; });
+
+    bool result = this->result;
+    running = false;
+
+    cv.notify_all();
+    return result;
 }
 
 
@@ -259,6 +343,8 @@ bool DPLL(std::vector<uint64_t*>& clauses, uint32_t _valueCount, uint64_t* _solu
     bool* discarded_clauses = new bool[clauseCount]();
     uint64_t* visited_literals = new uint64_t[value64Count]();
     uint64_t* literals = new uint64_t[value64Count]();
+
+    workers = new Worker[workerCount]();
 
     pureLiteralClauseDiscardCache = new bool[clauseCount]();
 
