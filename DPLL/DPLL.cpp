@@ -5,6 +5,13 @@
 #include <string.h>
 #include <thread>
 
+#ifdef _MSC_VER
+// windows is different so this is needed 
+#include <intrin.h>
+#define __builtin_popcountll __popcnt64
+#define __builtin_ctzll _tzcnt_u64
+#endif
+
 uint32_t clauseCount;
 uint32_t valueCount;
 uint32_t value64Count;
