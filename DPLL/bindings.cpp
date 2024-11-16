@@ -25,7 +25,7 @@ static Napi::Value Entrypoint(const Napi::CallbackInfo& info) {
     if (DPLL(clauses, valueCount, solution)) {
         return Napi::Buffer<uint64_t>::New(env, solution, value64Count);
     }
-    return Napi::String::New(env, "No solution");
+    return Napi::String::New(env, "UNSATISFIABLE");
 }
 
 #define DECLARE_NAPI_METHOD(name, func)  { name, 0, func, 0, 0, 0, napi_default, 0 }
