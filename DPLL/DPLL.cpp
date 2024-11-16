@@ -174,7 +174,7 @@ inline bool unitPropagate(dpllState &state) {
 }
 
 inline bool pureLiteralAssign(dpllState &state) {
-    // discarded clauses needs to be copied since it can change due to setLiteral
+    // discarded clauses need to be copied since it can change due to setLiteral
     // current state is needed since everything looped over in chunks
 
     bool *cache = (bool*)malloc(clauseCount);
@@ -197,22 +197,6 @@ inline bool pureLiteralAssign(dpllState &state) {
         }
         change |= set64False(state, part, isPure0 | state.visitedLiterals[part]);
         change |= set64True(state, part, isPure1 & ~state.visitedLiterals[part]);
-        /*for (uint32_t i = 0; i < 64; ++i) {
-            if (part * 64 + i >= valueCount) break;
-
-            // don't mess with literals that have already been set
-            if (state.visitedLiterals[part] & (1ull << i)) continue;
-            
-            if ((isPure0 & (1ull << i)) == 0) {
-                setLiteral(state, part * 64 + i, false);
-            }
-            if ((isPure1 & (1ull << i)) != 0) {
-                setLiteral(state, part * 64 + i, true);
-            }
-            /*
-            state.visitedLiterals[part * 64 + i];
-            state.literals[part * 64 + i] = !(isPure0 << i) || (isPure1 << i);*/
-        //}*/
     }
     free(cache);
     return change;
@@ -267,6 +251,13 @@ inline bool getResult(SolveResult &result) {
     return workers[result.worker].getResult();
 }
 
+/**
+ * Assigns `literalValue` to `literal` and finds a thread to continue solving from that point
+ * If no other thread is free, execution will continue on the current thread
+ * @param state The state of the DPLL algoritm 
+ * @param literal literal to set
+ * @param literalValue value to assign to `literal`
+ */
 inline SolveResult solve2(dpllState *state, uint32_t literal, bool literalValue) {
     SolveResult result = { -1u, false };
     setLiteral(*state, literal, literalValue);
