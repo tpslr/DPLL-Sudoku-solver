@@ -29,6 +29,7 @@ class Worker {
     std::condition_variable doneCv;
     bool result = false;
     bool done = false;
+    bool killed = false;
     void main();
 public:
     Worker();
@@ -37,4 +38,5 @@ public:
     bool running = false;
     void run(dpllState *state);
     bool getResult();
+    void kill();
 };

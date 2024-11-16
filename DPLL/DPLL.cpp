@@ -277,7 +277,13 @@ inline SolveResult solve2(dpllState *state, uint32_t literal, bool literalValue)
 
 Worker::Worker() {
     thread = new std::thread([&]{ main(); });
-    thread->detach();
+}
+void Worker::kill() {
+    if (killed) return;
+    killed = true;
+    cv.notify_all();
+    doneCv.notify_all();
+    thread->join();
 }
 
 void Worker::run(dpllState *state) {
@@ -291,16 +297,20 @@ void Worker::run(dpllState *state) {
 void Worker::main() {
     std::unique_lock<std::mutex> lock(mtx);
 
-    while (true) {
-        cv.wait(lock, [&]{ return running; });
+    while (!killed) {
+        cv.wait(lock, [&]{ return running | killed; });
+if (killed) {
+            break;
+        }
         
         result = solve(*state);
 
         done = true;
         doneCv.notify_all();
 
-        cv.wait(lock, [&]{ return !running; });
+        cv.wait(lock, [&]{ return !running | killed; });
     }
+lock.unlock();
 }
 
 bool Worker::getResult() {
@@ -336,5 +346,12 @@ bool DPLL(std::vector<uint64_t*>& clauses, uint32_t _valueCount, uint64_t* _solu
         0, &clauses, 0, discarded_clauses, visited_literals, literals
     };
 
-    return solve(dpll);
+    bool result = solve(dpll);
+
+    // Kill all workers since they could still be running on other branches
+    for (uint32_t i = 0; i < workerCount; ++i) {
+        auto worker = (workers + i);
+        worker->kill();
+    }
+    return result;
 }
