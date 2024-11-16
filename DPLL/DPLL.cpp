@@ -5,6 +5,13 @@
 #include <string.h>
 #include <thread>
 
+#ifdef _MSC_VER
+// windows is different so this is needed 
+#include <intrin.h>
+#define __builtin_popcountll __popcnt64
+#define __builtin_ctzll _tzcnt_u64
+#endif
+
 uint32_t clauseCount;
 uint32_t valueCount;
 uint32_t value64Count;
@@ -282,11 +289,10 @@ Worker::Worker() {
     thread = new std::thread([&]{ main(); });
 }
 void Worker::kill() {
-    if (killed) return;
+    std::lock_guard<std::mutex> lock(mtx);
     killed = true;
     cv.notify_all();
     doneCv.notify_all();
-    thread->join();
 }
 
 void Worker::run(dpllState *state) {
@@ -313,12 +319,13 @@ void Worker::main() {
 
         cv.wait(lock, [&]{ return !running | killed; });
     }
+    doneCv.notify_all();
     lock.unlock();
 }
 
 bool Worker::getResult() {
     std::unique_lock<std::mutex> l(mtx);
-    if (!done) doneCv.wait(l, [&]{ return done | solutionFound; });
+    if (!done) doneCv.wait(l, [&]{ return done | solutionFound | killed; });
 
     bool result = this->result;
     running = false;
@@ -357,6 +364,13 @@ bool DPLL(std::vector<uint64_t*>& clauses, uint32_t _valueCount, uint64_t* _solu
     for (uint32_t i = 0; i < workerCount; ++i) {
         auto worker = (workers + i);
         worker->kill();
+    }
+    // Join all threads to make sure they've exited before stopping
+    // This is needed to stop segfaults in the case where a thread is still doing something
+    // when this function exits and variables go out of scope and get free'd
+    for (uint32_t i = 0; i < workerCount; ++i) {
+        auto worker = (workers + i);
+        worker->thread->join();
     }
     return result;
 }
