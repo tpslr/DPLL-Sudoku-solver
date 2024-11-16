@@ -85,7 +85,7 @@ inline bool set64False(dpllState &state, uint32_t index, uint64_t value) {
 }
 
 
-inline dpllState copyState(dpllState& state) {
+inline dpllState* copyState(dpllState& state) {
     bool* discarded_clauses = (bool*)malloc(clauseCount);
     uint64_t* visited_literals = (uint64_t*)malloc(value64Count * sizeof(uint64_t));
     uint64_t* literals = (uint64_t*)malloc(value64Count * sizeof(uint64_t));
@@ -94,7 +94,7 @@ inline dpllState copyState(dpllState& state) {
     memcpy(visited_literals, state.visitedLiterals, value64Count * sizeof(uint64_t));
     memcpy(literals, state.literals, value64Count * sizeof(uint64_t));
 
-    return {
+    return new dpllState {
         state.lastLiteral, state.clauses, state.discardedClausesCount, discarded_clauses, visited_literals, literals
     };
 }
@@ -109,10 +109,11 @@ inline void copyState(dpllState& source, dpllState &destination) {
     destination.clauses = source.clauses;
 }
 
-inline void cleanupState(dpllState& state) {
-    free(state.discardedClauses);
-    free(state.literals);
-    free(state.visitedLiterals);
+inline void cleanupState(dpllState *state) {
+    free(state->discardedClauses);
+    free(state->literals);
+    free(state->visitedLiterals);
+    free(state);
 }
 
 inline uint32_t chooseLiteral(dpllState& state) {
@@ -235,33 +236,18 @@ bool solve(dpllState &state) {
         return false;
     }
 
-    /*// check setting literal to false
-    dpllState falseState = copyState(state);
-    setLiteral(falseState, literal, false);
-    if (solve(falseState)) {
-        cleanupState(falseState);
-        return true;
-    }
+    dpllState* falseState = &state;
     
-    // check setting literal to false
-    dpllState trueState = copyState(state);
-    setLiteral(trueState, literal, true);
-    if (solve(trueState)) {
-        cleanupState(trueState);
+    dpllState* trueState = copyState(state);
+
+    SolveResult resultFalse = solve2(falseState, literal, false);
+    SolveResult resultTrue = solve2(trueState, literal, true);
+
+    if (getResult(resultFalse) | getResult(resultTrue)) {
         return true;
     }
-    cleanupState(trueState);*/
 
-    dpllState falseState = copyState(state);
-    
-    dpllState trueState = copyState(state);
-
-    SolveResult resultFalse = solve2(&falseState, literal, false);
-    SolveResult resultTrue = solve2(&trueState, literal, true);
-
-    if (getResult(resultTrue) || getResult(resultFalse)) {
-        return true;
-    }
+    cleanupState(trueState);
 
     return false;
 }
@@ -285,7 +271,6 @@ inline SolveResult solve2(dpllState *state, uint32_t literal, bool literalValue)
     }
     if (result.worker == -1u) {
         result.result = solve(*state);
-        cleanupState(*state);
     }
     return result;
 }
@@ -310,7 +295,6 @@ void Worker::main() {
         cv.wait(lock, [&]{ return running; });
         
         result = solve(*state);
-        cleanupState(*state);
 
         done = true;
         doneCv.notify_all();
