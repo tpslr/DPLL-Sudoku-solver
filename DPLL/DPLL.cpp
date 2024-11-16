@@ -330,6 +330,8 @@ bool Worker::getResult() {
 
 
 bool DPLL(std::vector<uint64_t*>& clauses, uint32_t _valueCount, uint64_t* _solution) {
+    solutionFound = false;
+    
     valueCount = _valueCount;
     value64Count = ((valueCount - 1) >> 6) + 1;
 
