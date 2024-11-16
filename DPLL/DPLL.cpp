@@ -213,6 +213,9 @@ inline bool pureLiteralAssign(dpllState &state) {
 
 
 bool solve(dpllState &state) {
+// The solution was already found somewhere
+    // This is needed when using multiple threads, so the other threads exit when the solution is found by one
+    if (solutionFound) return false;
     bool change = true;
     while (change) {
         change = false;
@@ -244,6 +247,9 @@ bool solve(dpllState &state) {
     SolveResult resultTrue = solve2(trueState, literal, true);
 
     if (getResult(resultFalse) | getResult(resultTrue)) {
+        // Kill workers as the solution was found (to stop them doing unnecessary work)
+        workers[resultFalse.worker].kill();
+        workers[resultTrue.worker].kill();
         return true;
     }
 
@@ -315,7 +321,7 @@ lock.unlock();
 
 bool Worker::getResult() {
     std::unique_lock<std::mutex> l(mtx);
-    if (!done) doneCv.wait(l, [&]{ return done; });
+    if (!done) doneCv.wait(l, [&]{ return done | solutionFound; });
 
     bool result = this->result;
     running = false;
