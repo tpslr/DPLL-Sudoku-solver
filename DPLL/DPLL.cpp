@@ -213,7 +213,7 @@ inline bool pureLiteralAssign(dpllState &state) {
 
 
 bool solve(dpllState &state) {
-// The solution was already found somewhere
+    // The solution was already found somewhere
     // This is needed when using multiple threads, so the other threads exit when the solution is found by one
     if (solutionFound) return false;
     bool change = true;
@@ -305,7 +305,7 @@ void Worker::main() {
 
     while (!killed) {
         cv.wait(lock, [&]{ return running | killed; });
-if (killed) {
+        if (killed) {
             break;
         }
         
@@ -316,7 +316,7 @@ if (killed) {
 
         cv.wait(lock, [&]{ return !running | killed; });
     }
-lock.unlock();
+    lock.unlock();
 }
 
 bool Worker::getResult() {
