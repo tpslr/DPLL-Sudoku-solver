@@ -24,7 +24,6 @@ inline bool getResult(SolveResult &result);
 
 class Worker {
     dpllState* state;
-    std::thread* thread;
     std::condition_variable cv;
     std::condition_variable doneCv;
     bool result = false;
@@ -33,6 +32,7 @@ class Worker {
     void main();
 public:
     Worker();
+    std::thread* thread;
     std::mutex mtx;
     std::mutex runningMtx;
     bool running = false;
