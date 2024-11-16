@@ -9,18 +9,18 @@ fi
 
 cd "DPLL/build"
 
+rm ./DPLL/build/coverage/obj.target/DPLL/DPLL.gcno
+rm ./DPLL/build/coverage/obj.target/DPLL/bindings.gcno
+
 echo "Building DPLL with coverage enabled"
-set BUILDTYPE coverage
-export BUILDTYPE
-make DPLL
+export BUILDTYPE=coverage
+make DPLL --always-make
 
 cd ../..
 
 echo "Running tests"
-set NODE_ENV development 
-export NODE_ENV
-set COVERAGE true
-export COVERAGE
+export NODE_ENV=development 
+export COVERAGE=true
 npm test
 
 echo "Generating coverate report"
