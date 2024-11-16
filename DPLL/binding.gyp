@@ -28,6 +28,12 @@
             "Release": {
                 "defines": [ "NAPI_DISABLE_CPP_EXCEPTIONS." ],
                 "ccflags": ["-fno-exceptions", "-Ofast", "-march=native"]
+            },
+            "coverage": {
+                "defines": [ "NAPI_CPP_EXCEPTIONS" ],
+                "cflags": ["-fexceptions", "-Wall", "-ftest-coverage", "--coverage"],
+                "cflags_cc": ["-fexceptions", "-Wall", "-ftest-coverage", "--coverage"],
+                "ldflags": ["-fprofile-arcs"],
             }
         }
     }]
