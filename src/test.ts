@@ -26,13 +26,13 @@ async function cnfTests(dir: string) {
         }
         
         // Run test
-        test(name, async () => {
+        test(`CNF solving - ${name}`, async () => {
             const solution = await solveCNF(filePath);
             assert.strictEqual(solution, await readFile(solutionPath, "utf-8"));
         });
 
         if (files.includes(name + "_converted")) {
-            test(name + "_parsing", async () => {
+            test(`CNF parsing - ${name}`, async () => {
                 // converted form
                 const cnf = parseCNF(await readFile(filePath, "utf-8"));
 
