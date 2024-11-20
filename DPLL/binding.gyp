@@ -26,7 +26,7 @@
                 ]
             },
             "Release": {
-                "defines": [ "NAPI_DISABLE_CPP_EXCEPTIONS." ],
+                "defines": [ "NAPI_DISABLE_CPP_EXCEPTIONS" ],
                 "ccflags": ["-fno-exceptions", "-Ofast", "-march=native"]
             },
             "coverage": {
