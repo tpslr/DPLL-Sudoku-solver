@@ -10,10 +10,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sudoku Solver</title>
     <script defer type="module">
-        import { clearBoard, setSure, solve } from "./index.js";
+        import { clearBoard, setSure, solve, importClipboard, importFile } from "./index.js";
         window.clearBoard = clearBoard;
         window.setSure = setSure;
         window.solve = solve;
+        window.importClipboard = importClipboard;
+        window.importFile = importFile;
     </script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -28,6 +30,13 @@
             <button onclick="setSure()">set sure</button>
             <button onclick="solve()">solve</button>
             <button onclick="clearBoard()">clear</button>
+            <br>
+            <br>
+            <button onclick="importClipboard()">Import from clipboard</button>
+            <!--<br>
+            <br>
+            <label for="import-file">Select file to import</label>
+            <input type="file" id="import-file" onchange="importFile()">-->
         </div>
     </div>
 </body>

@@ -1,3 +1,4 @@
+import type { SudokuParseResult } from "../sudokuParser.js";
 import { Sudoku } from "../sudoku.js";
 
 const boardElem: HTMLDivElement = document.getElementById("board") as HTMLDivElement;
@@ -375,4 +376,36 @@ async function solve() {
     }
 }
 
-export { clearBoard, setSure, solve };
+async function importClipboard() {
+    const text = await navigator.clipboard.readText();
+    console.log(text);
+
+    const res = await fetch("./parse", { 
+        method: "POST",
+        body: text,
+        headers: [["Content-Type", "text/plain"]]
+    });
+
+    const result = await res.json() as SudokuParseResult;
+
+    if ("error" in result) {
+        alert(result.error);
+        return;
+    }
+
+    clearBoard();
+
+    for (const x in board) {
+        for (const y in board[x]) {
+            board[x][y].value = result.sudoku[x][y].value ?? undefined;
+        }
+    }
+
+    setSure();
+}
+
+async function importFile() {
+
+}
+
+export { clearBoard, setSure, solve, importClipboard, importFile };
