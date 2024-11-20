@@ -35,6 +35,16 @@ class Cell {
         this.x = x; this.y = y;
         this.elem = document.createElement("div");
         this.elem.className = "cell";
+        if (x % 3 == 0) {
+            this.elem.classList.add("gridcell-x-left");
+        } else if ((x + 1) % 3 == 0) {
+            this.elem.classList.add("gridcell-x-right");
+        }
+        if (y % 3 == 0) {
+            this.elem.classList.add("gridcell-y-top");
+        } else if ((y + 1) % 3 == 0) {
+            this.elem.classList.add("gridcell-y-bottom");
+        }
         this.input = document.createElement("input");
         this.input.maxLength = 1;
         this.input.type = "number";
