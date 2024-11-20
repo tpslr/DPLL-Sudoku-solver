@@ -1,8 +1,27 @@
 import { readFile } from "fs/promises";
 import DPLL from "DPLL";
 import { parseCNF, parseSolution } from "./cnf.js";
+import { solveSudoku } from "./sudoku.js";
+import { SudokuCNFConverter } from "./sudokuCnfConverter.js";
 
-// import "./sudoku.js";
+import express from "express";
+import bodyParser from "body-parser";
+const app = express();
+
+
+app.use(express.static("./static"));
+
+app.get("/index.js", (req, res) => {
+    res.sendFile("./frontend/index.js", { root: import.meta.dirname });
+});
+
+app.post("/solve", bodyParser.json(), (req, res) => {
+    const response = {
+        result: solveSudoku(req.body)
+    };
+    res.send(response);
+});
+
 
 /**
  * Solves a conjuctive normal form SAT problem in a file
@@ -22,5 +41,12 @@ async function solveCNF(path: string) {
 
     return parseSolution(solution, cnf.variableCount);
 }
+const server = app.listen(5001, () => {
+    let address = server.address();
+    if (typeof address === "object" && address !== null) {
+        address = `http://localhost:${address.port}`;
+    }
+    console.log(`Listening on ${address}`);
+});
 
 export { solveCNF };
