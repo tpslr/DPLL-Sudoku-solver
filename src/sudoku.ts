@@ -2,12 +2,12 @@ import DPLL from "DPLL";
 import { parseCNF, parseSolution } from "./cnf.js";
 import { SudokuCNFConverter } from "./sudokuCnfConverter.js";
 
-interface Cell {
+interface SudokuCell {
     value: number | null,
     possible: number[]
 }
 
-type Sudoku = Cell[][];
+type Sudoku = SudokuCell[][];
 
 
 /**
@@ -49,4 +49,4 @@ function solveSudoku(sudoku: Sudoku) {
 
 
 export { printSudoku, solveSudoku };
-export type { Sudoku };
+export type { Sudoku, SudokuCell };

@@ -7,7 +7,7 @@ test("sudokuParser/parseSudoku", () => {
     const testSudoku1 = "12.......\n.........\n.........\n.........\n.........\n.........\n.........\n.........\n.........\n";
     const testSudoku2 = ".........\n.........\n14.......\n.........\n.........\n.........\n.........\n.........\n.........\n";
 
-    const sudoku1 = parseSudoku(testSudoku1);
+    const sudoku1 = parseSudoku(testSudoku1).sudoku;
 
     // value at 0, 0 is 1
     assert.strictEqual(sudoku1[0][0].value, 1);
@@ -23,7 +23,7 @@ test("sudokuParser/parseSudoku", () => {
     // value at 1, 0 is null
     assert.strictEqual(sudoku1[1][0].value, null);
 
-    const sudoku2 = parseSudoku(testSudoku2);
+    const sudoku2 = parseSudoku(testSudoku2).sudoku;
 
     // value at 2, 0 is 1
     assert.strictEqual(sudoku2[2][0].value, 1);
