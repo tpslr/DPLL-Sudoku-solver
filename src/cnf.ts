@@ -19,7 +19,7 @@ function parseCNF(cnf: string) {
 
     for (const line of lines) {
         // line doesn't begin with number or dash, skip
-        if (line.match(/^[^-\d]/)) continue;
+        if (line.match(/^[^-\d]/) || line.length === 0) continue;
 
         const buffer = Buffer.alloc(clauseLen / 8);
 
