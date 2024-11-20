@@ -101,3 +101,8 @@ div.selector {
     outline: solid blue 2px;
     pointer-events: none;
 }
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
