@@ -21,6 +21,7 @@ bool solutionFound;
 
 bool* pureLiteralClauseDiscardCache;
 
+std::mutex runningMutex;
 uint32_t workerCount = 30;
 Worker *workers;
 
@@ -262,14 +263,18 @@ inline SolveResult solve2(dpllState *state, uint32_t literal, bool literalValue)
     SolveResult result = { -1u, false };
     setLiteral(*state, literal, literalValue);
     
+    std::unique_lock<std::mutex> runningLock(runningMutex);
+
     for (uint32_t i = 0; i < workerCount; i++) {
-        std::lock_guard lock(workers[i].runningMtx);
         if (!workers[i].running) {
             workers[i].run(state);
             result.worker = i;
             break;
         }
     }
+
+    runningLock.unlock();
+
     if (result.worker == -1u) {
         result.result = solve(*state);
     }
@@ -319,6 +324,7 @@ bool Worker::getResult() {
     if (!done) doneCv.wait(l, [&]{ return done | solutionFound | killed; });
 
     bool result = this->result;
+    std::unique_lock<std::mutex> runningLock(runningMutex);
     running = false;
 
     cv.notify_all();

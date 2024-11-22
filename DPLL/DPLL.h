@@ -34,7 +34,6 @@ public:
     Worker();
     std::thread* thread;
     std::mutex mtx;
-    std::mutex runningMtx;
     bool running = false;
     void run(dpllState *state);
     bool getResult();
