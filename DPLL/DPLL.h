@@ -38,4 +38,5 @@ public:
     void run(dpllState *state);
     bool getResult();
     void kill();
+    void notifyStop();
 };

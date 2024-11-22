@@ -42,6 +42,18 @@ div.cell {
     position: relative;
     border: solid black 1px;
 }
+div.gridcell-x-left {
+    border-left: solid black 2px;
+}
+div.gridcell-x-right {
+    border-right: solid black 2px;
+}
+div.gridcell-y-top {
+    border-top: solid black 2px;
+}
+div.gridcell-y-bottom {
+    border-bottom: solid black 2px;
+}
 div.cell > * {
     position: absolute;
     width: 100%;
