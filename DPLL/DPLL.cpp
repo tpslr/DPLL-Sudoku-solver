@@ -221,6 +221,11 @@ bool solve(dpllState &state) {
         if (solutionFound) return false;
         solutionFound = true;
         memcpy(solution, state.literals, value64Count * sizeof(uint64_t));
+
+        for (uint32_t i = 0; i < workerCount; i++) {
+            workers[i].notifyStop();
+        }
+
         return true;
     }
 
@@ -286,6 +291,11 @@ void Worker::kill() {
     doneCv.notify_all();
 }
 
+void Worker::notifyStop() {
+    cv.notify_all();
+    doneCv.notify_all();
+}
+
 void Worker::run(dpllState *state) {
     std::lock_guard<std::mutex> lock(mtx);
     this->state = state;
@@ -297,9 +307,9 @@ void Worker::run(dpllState *state) {
 void Worker::main() {
     std::unique_lock<std::mutex> lock(mtx);
 
-    while (!killed) {
-        cv.wait(lock, [&]{ return running | killed; });
-        if (killed) {
+    while (!killed && !solutionFound) {
+        cv.wait(lock, [&]{ return running || killed; });
+        if (killed || solutionFound) {
             break;
         }
         
@@ -308,7 +318,7 @@ void Worker::main() {
         done = true;
         doneCv.notify_all();
 
-        cv.wait(lock, [&]{ return !running | killed; });
+        cv.wait(lock, [&]{ return !running || killed || solutionFound; });
     }
     doneCv.notify_all();
     lock.unlock();
@@ -316,7 +326,7 @@ void Worker::main() {
 
 bool Worker::getResult() {
     std::unique_lock<std::mutex> l(mtx);
-    if (!done) doneCv.wait(l, [&]{ return done | solutionFound | killed; });
+    if (!done) doneCv.wait(l, [&]{ return done || solutionFound || killed; });
 
     bool result = this->result;
     running = false;
