@@ -22,7 +22,7 @@ bool solutionFound;
 bool* pureLiteralClauseDiscardCache;
 
 std::mutex runningMutex;
-uint32_t workerCount = 30;
+uint32_t workerCount = 2;
 Worker *workers;
 
 
