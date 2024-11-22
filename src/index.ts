@@ -19,9 +19,7 @@ app.get("/index.js", (req, res) => {
 });
 
 app.post("/solve", bodyParser.json(), (req, res) => {
-    const response = {
-        result: solveSudoku(req.body)
-    };
+    const response = solveSudoku(req.body);
     res.send(response);
 });
 

@@ -1,5 +1,5 @@
 import type { SudokuParseResult } from "../sudokuParser.js";
-import { Sudoku } from "../sudoku.js";
+import { Sudoku, SudokuSolveResult } from "../sudoku.js";
 
 const boardElem: HTMLDivElement = document.getElementById("board") as HTMLDivElement;
 const board: Cell[][] = [];
@@ -370,20 +370,39 @@ async function solve() {
         body: JSON.stringify(sudoku),
         headers: [["Content-Type", "application/json"]]
     });
-    const json = await res.json();
+    const result = await res.json() as SudokuSolveResult;
 
-    const result = json.result as "UNSATISFIABLE" | Sudoku;
-
-    if (result === "UNSATISFIABLE") {
+    if (result.result === "UNSATISFIABLE") {
         alert(result);
         return;
     }
 
     for (const x in board) {
         for (const y in board[x]) {
-            board[x][y].value = result[x][y].value ?? undefined;
+            board[x][y].value = result.result[x][y].value ?? undefined;
         }
     }
+
+    displaySolvingStats(result);
+}
+
+function displaySolvingStats(result: SudokuSolveResult) {
+    const statsElem = document.getElementById("statistics");
+    if (!statsElem) throw new Error();
+
+    const numberFormatter = Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
+
+    const conversionTime = numberFormatter.format(result.conversionTime);
+    const parsingTime = numberFormatter.format(result.parsingTime);
+    const solvingTime = numberFormatter.format(result.solvingTime);
+
+    statsElem.innerHTML = `<h4>Solving statistics</h4>
+        Sudoku conversion: ${conversionTime}ms<br>
+        CNF parsing:       ${parsingTime}ms<br>
+        Solving:           ${solvingTime}ms<br>
+        <b>Result:</b> ${result.satisfiable
+            ? "SATISFIABLE" 
+            : "UNSATISFIABLE"}`;
 }
 
 async function importClipboard() {
