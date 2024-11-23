@@ -2,10 +2,8 @@ import { readFile } from "fs/promises";
 import DPLL from "DPLL";
 import { parseCNF, parseSolution } from "./cnf.js";
 
-import { parseSudoku, SudokuParseResult } from "./sudokuParser.js";
-import { solveSudoku, Sudoku } from "./sudoku.js";
-import { SudokuCNFConverter } from "./sudokuCnfConverter.js";
-import { writeFileSync } from "fs";
+import { parseSudoku, simplifySudoku } from "./sudokuParser.js";
+import { printSudoku, solveSudoku, Sudoku } from "./sudoku.js";
 
 import express from "express";
 import bodyParser from "body-parser";
@@ -56,23 +54,57 @@ async function solveCNF(path: string) {
 }
 
 
+for (let i = 0; i < process.argv.length; i++) {
+    const arg = process.argv[i];
+    if (arg === "--solvecnf") {
+        const cnfFile = process.argv[++i];
+        console.log(solveCNF(cnfFile));
+        process.exit();
+    } else if (arg === "--solvesudoku") {
+        const nextArg = process.argv[++i];
 
-/*const converter = new SudokuCNFConverter();
-const cnfText = converter.convert(sudoku);
+        // eslint-disable-next-line no-useless-escape
+        const data = nextArg.length === 81 && nextArg.match(/^[\d\.xX]*$/)
+            ? nextArg // arg is sudoku string
+            : await readFile(nextArg, "utf-8"); // arg is anything else (assume it's a file path)
 
-writeFileSync("./test.cnf", cnfText);
+        let sudoku: Sudoku | null = null;
 
-const cnf = parseCNF(cnfText);
+        try {
+            const result = parseSudoku(data);
+            sudoku = result.sudoku;
+            console.log(`Sudoku file parsed as ${result.format}`);
+            printSudoku(sudoku);
+        } catch {
+            console.error(`Unable to parse sudoku from ${nextArg}!`);
+            process.exit(1);
+        }
 
-const solution = DPLL.solve(cnf.variableCount, cnf.clauses);
+        simplifySudoku(sudoku);
+        
+        const solved = solveSudoku(sudoku);
 
-if (solution === "UNSATISFIABLE") {
-    console.log(solution);
-} else {
-    console.log(parseSolution(solution, cnf.variableCount));
-    console.log(converter.parseResult(parseSolution(solution, cnf.variableCount)));
-}*/
+        const numberFormatter = Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
 
+        const totalTime = numberFormatter.format(solved.conversionTime + solved.parsingTime + solved.solvingTime);
+        const conversionTime = numberFormatter.format(solved.conversionTime);
+        const parsingTime = numberFormatter.format(solved.parsingTime);
+        const solvingTime = numberFormatter.format(solved.solvingTime);
+
+
+        console.log(`Solved in ${totalTime}ms (conversion ${conversionTime}ms, parsing ${parsingTime}ms, solving ${solvingTime}ms)\n`);
+        
+        console.log("Result: \n");
+
+        if (solved.result === "UNSATISFIABLE") {
+            console.log("UNSATISFIABLE");
+        } else {
+            printSudoku(solved.result);
+        }
+        
+        process.exit();
+    }
+}
 
 
 const server = app.listen(5001, () => {
