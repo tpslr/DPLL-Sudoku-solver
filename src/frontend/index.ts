@@ -256,6 +256,25 @@ function applyNavigationEventHandlers(input: HTMLInputElement, x: number, y: num
         focus(false);
     };
     input.onkeydown = (evt) => {
+        if (evt.ctrlKey && evt.code === "Backspace") {
+            board[x][y].sure = false;
+            evt.preventDefault();
+        }
+
+        if (evt.shiftKey) {
+            const match = evt.code.match(/Digit(\d)/);
+            if (!match) return;
+
+            const cell = board[x][y];
+            const number = parseInt(match[1]);
+            if (cell.possible.includes(number)) {
+                cell.removePossible(number);
+            } else {
+                cell.possible.push(number);
+                cell.updatePossible();
+            }
+        }
+
         if (evt.code.includes("Arrow")) { 
             evt.preventDefault();
             let offset = [0, 0];
