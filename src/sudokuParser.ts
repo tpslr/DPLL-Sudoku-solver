@@ -55,7 +55,6 @@ interface SudokuParseResult {
  * @returns 
  */
 function parseSudoku(data: string, lax = false): SudokuParseResult {
-    console.log(data);
     // strip out leading and trailing tabs and spaces
     data = data.replace(/^[ \t]+|[ \t]+$/gm, "");
 

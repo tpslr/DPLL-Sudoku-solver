@@ -407,7 +407,6 @@ function displaySolvingStats(result: SudokuSolveResult) {
 
 async function importClipboard() {
     const text = await navigator.clipboard.readText();
-    console.log(text);
 
     const res = await fetch("./parse", { 
         method: "POST",
