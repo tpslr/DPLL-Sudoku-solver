@@ -139,7 +139,7 @@ function parseSudoku(data: string, lax = false): SudokuParseResult {
 
 function createCell(value: string): SudokuCell {
     return {
-        value: value.match(/[0-9]/)
+        value: value.match(/[1-9]/)
             ? parseInt(value)
             : null,
         possible: [1, 2, 3, 4, 5, 6, 7, 8, 9]
