@@ -2,8 +2,7 @@ import test from "node:test";
 import { readdir, readFile } from "fs/promises";
 import { join as joinPath } from "path";
 import assert from "node:assert";
-import { solveCNF } from "../index.js";
-import { parseCNF } from "../cnf.js";
+import { parseCNF, solveCNF } from "../cnf.js";
 
 /**
  * Run tests on .cnf files
@@ -39,7 +38,7 @@ async function cnfTests(dir: string) {
                 const expectedNums = await readFile(joinPath(dir, name + "_converted"), "utf-8");
 
                 // split the expected file on newlines
-                const expectedClauses = expectedNums.split(/(?:\n|\r|\r\n)/g);
+                const expectedClauses = expectedNums.split(/(?:\r\n|\n|\r)/g);
 
                 assert.strictEqual(cnf.clauseCount, expectedClauses.length, "Number of clauses should match!");
 

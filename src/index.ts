@@ -1,6 +1,5 @@
 import { readFile } from "fs/promises";
-import DPLL from "DPLL";
-import { parseCNF, parseSolution } from "./cnf.js";
+import { solveCNF } from "./cnf.js";
 
 import { parseSudoku, simplifySudoku } from "./sudokuParser.js";
 import { printSudoku, solveSudoku, Sudoku } from "./sudoku.js";
@@ -33,25 +32,6 @@ app.post("/parse", bodyParser.text(), (req, res) => {
     }
 });
 
-
-/**
- * Solves a conjuctive normal form SAT problem in a file
- * @param path File path to CNF SAT problem
- * @returns Solution to CNF SAT problem or "UNSATISFIABLE"
- */
-async function solveCNF(path: string) {
-    const data = await readFile(path, "utf-8");
-
-    const cnf = parseCNF(data);
-
-    const solution = DPLL.solve(cnf.variableCount, cnf.clauses);
-
-    if (solution === "UNSATISFIABLE") {
-        return solution;
-    }
-
-    return parseSolution(solution, cnf.variableCount);
-}
 
 
 for (let i = 0; i < process.argv.length; i++) {
@@ -115,4 +95,3 @@ const server = app.listen(5001, () => {
     console.log(`Listening on ${address}`);
 });
 
-export { solveCNF };
