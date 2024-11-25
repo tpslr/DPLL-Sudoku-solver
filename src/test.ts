@@ -1,5 +1,5 @@
 import { readdir } from "fs/promises";
-import { join as joinPath } from "path";
+import { dirname, join as joinPath } from "path";
 
 
 const tests = await readdir("./dist/tests");
@@ -12,7 +12,7 @@ for (const test of tests) {
     if (only && test.replace(".js", "") !== only) continue; 
 
     console.info(`Running tests ${test}...`);
-    console.info(joinPath(import.meta.dirname, "tests", test));
-    import(joinPath(import.meta.dirname, "tests", test));
+    console.info(joinPath(dirname(import.meta.url), "tests", test));
+    import(joinPath(dirname(import.meta.url), "tests", test));
 }
 
