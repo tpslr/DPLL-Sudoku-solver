@@ -57,6 +57,10 @@ inline DPLLOperationResult setLiteral(dpllState &state, uint32_t literal, bool v
     }
     return { true, false };
 }
+
+/**
+ * Sets every `1` bit in `value` as a true literal
+ */
 inline DPLLOperationResult set64True(dpllState &state, uint32_t index, uint64_t value) {
     if (value == 0) return { false, false };
 
@@ -71,7 +75,7 @@ inline DPLLOperationResult set64True(dpllState &state, uint32_t index, uint64_t 
 
     // discard all clauses that become true by setting value
     for (uint32_t i = 0; i < clauseCount; ++i) {
-        if (state.discardedClauses[i]) continue; // skip clauses were already discarded
+        if (state.discardedClauses[i]) continue; // skip clauses which were already discarded
 
         uint64_t* clause = state.clauses->at(i);
 
@@ -83,6 +87,9 @@ inline DPLLOperationResult set64True(dpllState &state, uint32_t index, uint64_t 
     return { true, false };
 }
 
+/**
+ * Sets every `0` bit in `value` as a false literal
+ */
 inline DPLLOperationResult set64False(dpllState &state, uint32_t index, uint64_t value) {
     if (value == -1ull) return { false, false };
 
@@ -97,7 +104,7 @@ inline DPLLOperationResult set64False(dpllState &state, uint32_t index, uint64_t
 
     // discard all clauses that become true by setting value
     for (uint32_t i = 0; i < clauseCount; ++i) {
-        if (state.discardedClauses[i]) continue; // skip clauses were already discarded
+        if (state.discardedClauses[i]) continue; // skip clauses which were already discarded
 
         uint64_t* clause = state.clauses->at(i);
 
@@ -160,7 +167,7 @@ inline DPLLOperationResult unitPropagate(dpllState &state) {
     memset(set1, 0, value64Count * sizeof(uint64_t));
 
     for (uint32_t i = 0; i < clauseCount; ++i) {
-        if (state.discardedClauses[i]) continue; // skip clauses were already discarded
+        if (state.discardedClauses[i]) continue; // skip clauses which were already discarded
 
         uint64_t* clause = state.clauses->at(i);
 
@@ -379,10 +386,14 @@ void Worker::run(dpllState *state) {
     this->cv.notify_all();
 }
 
+/**
+ * Worker thread main loop
+ */
 void Worker::main() {
     std::unique_lock<std::mutex> lock(mtx);
 
     while (!killed && !solutionFound) {
+        // wait for the signal to start processing
         cv.wait(lock, [&]{ return running || killed; });
         if (killed || solutionFound) {
             break;
@@ -390,6 +401,7 @@ void Worker::main() {
         
         result = solve(*state);
 
+        // tell caller that the work is done
         done = true;
         doneCv.notify_all();
 
