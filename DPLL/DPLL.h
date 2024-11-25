@@ -40,3 +40,7 @@ public:
     void kill();
     void notifyStop();
 };
+struct DPLLOperationResult {
+    bool change;
+    bool unsatisfiable;
+};

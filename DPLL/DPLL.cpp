@@ -26,10 +26,15 @@ uint32_t workerCount = 2;
 Worker *workers;
 
 
-inline void setLiteral(dpllState &state, uint32_t literal, bool value) {
+inline DPLLOperationResult setLiteral(dpllState &state, uint32_t literal, bool value) {
     uint32_t base = literal >> 6;
     uint32_t offset = literal & 63;
-    if (state.visitedLiterals[base] & (1ull << offset)) return;
+
+    if (state.visitedLiterals[base] & (1ull << offset)) {
+        // this literal has already been set, and must not be set again, return UNSAT
+        return { false, true };
+    }
+
     state.visitedLiterals[base] |= 1ull << offset;
     if (value) {
         state.literals[base] |= (((uint64_t)1) << offset);
@@ -50,10 +55,16 @@ inline void setLiteral(dpllState &state, uint32_t literal, bool value) {
             state.discardedClausesCount++;
         }
     }
+    return { true, false };
 }
+inline DPLLOperationResult set64True(dpllState &state, uint32_t index, uint64_t value) {
+    if (value == 0) return { false, false };
 
-inline bool set64True(dpllState &state, uint32_t index, uint64_t value) {
-    if (value == 0) return false;
+    if (state.visitedLiterals[index] & value) {
+        // contains literal which has already been set, and must not be set again, return UNSAT
+        return { false, true };
+    }
+
     state.visitedLiterals[index] |= value;
 
     state.literals[index] |= value;
@@ -69,11 +80,17 @@ inline bool set64True(dpllState &state, uint32_t index, uint64_t value) {
             state.discardedClausesCount++;
         }
     }
-    return true;
+    return { true, false };
 }
 
-inline bool set64False(dpllState &state, uint32_t index, uint64_t value) {
-    if (value == -1ull) return false;
+inline DPLLOperationResult set64False(dpllState &state, uint32_t index, uint64_t value) {
+    if (value == -1ull) return { false, false };
+
+    if (state.visitedLiterals[index] & ~value) {
+        // contains literal which has already been set, and must not be set again, return UNSAT
+        return { false, true };
+    }
+
     state.visitedLiterals[index] |= ~value;
 
     state.literals[index] &= value;
@@ -89,7 +106,7 @@ inline bool set64False(dpllState &state, uint32_t index, uint64_t value) {
             state.discardedClausesCount++;
         }
     }
-    return true;
+    return { true, false };
 }
 
 
@@ -134,8 +151,14 @@ inline uint32_t chooseLiteral(dpllState& state) {
     return -1;
 }
 
-inline bool unitPropagate(dpllState &state) {
+inline DPLLOperationResult unitPropagate(dpllState &state) {
     bool change = false;
+
+    uint64_t* set0 = (uint64_t*)malloc(value64Count * sizeof(uint64_t));
+    uint64_t* set1 = (uint64_t*)malloc(value64Count * sizeof(uint64_t));
+    memset(set0, 255, value64Count * sizeof(uint64_t));
+    memset(set1, 0, value64Count * sizeof(uint64_t));
+
     for (uint32_t i = 0; i < clauseCount; ++i) {
         if (state.discardedClauses[i]) continue; // skip clauses were already discarded
 
@@ -166,15 +189,37 @@ inline bool unitPropagate(dpllState &state) {
         }
 
         if (literalCount == 1) {
-            bool value = (clause[unitPart * 2 + 1] & (1ull << unitOffset)) == 0 ? true : false;
-            setLiteral(state, unitPart * 64 + unitOffset, value);
-            change = true;
+            if ((clause[unitPart * 2 + 1] & (1ull << unitOffset)) == 0) {
+                // literal is not negated in clause, set it to 1
+                set1[unitPart] |= 1ull << unitOffset;
+            }
+            else {
+                // literal is negated in clause, set it to 0
+                set0[unitPart] &= ~(1ull << unitOffset);
+            }
         }
     }
-    return change;
+    // and now set everything we decided needs to be set
+    for (uint32_t part = 0; part < value64Count; ++part) {
+        if (set1[part] != 0) {
+            auto result = set64True(state, part, set1[part]);
+            if (result.unsatisfiable) {
+                return result;
+            }
+            change |= result.change;
+        }
+        if (set0[part] != -1ull) {
+            auto result = set64False(state, part, set0[part]);
+            if (result.unsatisfiable) {
+                return result;
+            }
+            change |= result.change;
+        }
+    }
+    return { change, false };
 }
 
-inline bool pureLiteralAssign(dpllState &state) {
+inline DPLLOperationResult pureLiteralAssign(dpllState &state) {
     // discarded clauses need to be copied since it can change due to setLiteral
     // current state is needed since everything looped over in chunks
 
@@ -183,24 +228,42 @@ inline bool pureLiteralAssign(dpllState &state) {
 
     bool change = false;
 
-    for (uint32_t part = 0; part < value64Count; ++part) {
-        uint64_t isPure0 = 0;
-        uint64_t isPure1 = (uint64_t)-1;
+    uint64_t* isPure0 = (uint64_t*)malloc(value64Count * sizeof(uint64_t));
+    uint64_t* isPure1 = (uint64_t*)malloc(value64Count * sizeof(uint64_t));
+    memset(isPure0, 0, value64Count * sizeof(uint64_t));
+    memset(isPure1, 255, value64Count * sizeof(uint64_t));
 
-        for (uint32_t i = 0; i < clauseCount; ++i) {
-            if (cache[i]) continue;
-            uint64_t* clause = state.clauses->at(i);
-            // skip clauses that don't include anything in this range
+    for (uint32_t clauseNumber = 0; clauseNumber < clauseCount; ++clauseNumber) {
+        if (cache[clauseNumber]) continue;
+
+        uint64_t* clause = state.clauses->at(clauseNumber);
+
+        for (uint32_t part = 0; part < value64Count; ++part) {
+            // skip parts where nothing exists in this range
             if (clause[part * 2] == 0) continue;
 
-            isPure0 |= clause[part * 2] & ~clause[part * 2 + 1];
-            isPure1 &= ~clause[part * 2] | ~clause[part * 2 + 1];
+            isPure0[part] |= clause[part * 2] & ~clause[part * 2 + 1];
+            isPure1[part] &= ~clause[part * 2] | ~clause[part * 2 + 1];
         }
-        change |= set64False(state, part, isPure0 | state.visitedLiterals[part]);
-        change |= set64True(state, part, isPure1 & ~state.visitedLiterals[part]);
     }
+
+    for (uint32_t part = 0; part < value64Count; ++part) {
+        auto result = set64False(state, part, isPure0[part] | state.visitedLiterals[part]);
+        if (result.unsatisfiable) return result;
+
+        change |= result.change;
+
+        result = set64True(state, part, isPure1[part] & ~state.visitedLiterals[part]);
+        if (result.unsatisfiable) return result;
+
+        change |= result.change;
+    }
+
+    free(isPure0);
+    free(isPure1);
+
     free(cache);
-    return change;
+    return { change, false };
 }
 
 
@@ -214,8 +277,15 @@ bool solve(dpllState &state) {
         // keep doing unit propagation and pure literal assignment in a loop
         // (with good chances solving for one value makes the next one obvious, so there's no need to recursively guess)
         // this will technically slow down the algorithm in some cases (doing work once, seeing it doesn't solve it, and then choosing to try that literal later)
-        change |= unitPropagate(state);
-        change |= pureLiteralAssign(state);
+        auto result = unitPropagate(state);
+        if (result.unsatisfiable) return false;
+
+        change |= result.change;
+
+        result = pureLiteralAssign(state);
+        if (result.unsatisfiable) return false;
+        
+        change |= result.change;
     }
 
     if (state.discardedClausesCount == clauseCount) {
