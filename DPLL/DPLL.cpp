@@ -211,6 +211,8 @@ inline DPLLOperationResult unitPropagate(dpllState &state) {
         if (set1[part] != 0) {
             auto result = set64True(state, part, set1[part]);
             if (result.unsatisfiable) {
+                free(set0);
+                free(set1);
                 return result;
             }
             change |= result.change;
@@ -218,11 +220,15 @@ inline DPLLOperationResult unitPropagate(dpllState &state) {
         if (set0[part] != -1ull) {
             auto result = set64False(state, part, set0[part]);
             if (result.unsatisfiable) {
+                free(set0);
+                free(set1);
                 return result;
             }
             change |= result.change;
         }
     }
+    free(set0);
+    free(set1);
     return { change, false };
 }
 
@@ -235,7 +241,7 @@ inline DPLLOperationResult pureLiteralAssign(dpllState &state) {
     memset(isPure1, 255, value64Count * sizeof(uint64_t));
 
     for (uint32_t clauseNumber = 0; clauseNumber < clauseCount; ++clauseNumber) {
-        if (cache[clauseNumber]) continue;
+        if (state.discardedClauses[clauseNumber]) continue;
 
         uint64_t* clause = state.clauses->at(clauseNumber);
 
@@ -250,12 +256,20 @@ inline DPLLOperationResult pureLiteralAssign(dpllState &state) {
 
     for (uint32_t part = 0; part < value64Count; ++part) {
         auto result = set64False(state, part, isPure0[part] | state.visitedLiterals[part]);
-        if (result.unsatisfiable) return result;
+        if (result.unsatisfiable) {
+            free(isPure0);
+            free(isPure1);
+            return result;
+        }
 
         change |= result.change;
 
         result = set64True(state, part, isPure1[part] & ~state.visitedLiterals[part]);
-        if (result.unsatisfiable) return result;
+        if (result.unsatisfiable) {
+            free(isPure0);
+            free(isPure1);
+            return result;
+        }
 
         change |= result.change;
     }
