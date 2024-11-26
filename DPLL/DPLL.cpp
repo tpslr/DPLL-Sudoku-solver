@@ -227,12 +227,6 @@ inline DPLLOperationResult unitPropagate(dpllState &state) {
 }
 
 inline DPLLOperationResult pureLiteralAssign(dpllState &state) {
-    // discarded clauses need to be copied since it can change due to setLiteral
-    // current state is needed since everything looped over in chunks
-
-    bool *cache = (bool*)malloc(clauseCount);
-    memcpy(cache, state.discardedClauses, clauseCount);
-
     bool change = false;
 
     uint64_t* isPure0 = (uint64_t*)malloc(value64Count * sizeof(uint64_t));
@@ -269,7 +263,6 @@ inline DPLLOperationResult pureLiteralAssign(dpllState &state) {
     free(isPure0);
     free(isPure1);
 
-    free(cache);
     return { change, false };
 }
 
