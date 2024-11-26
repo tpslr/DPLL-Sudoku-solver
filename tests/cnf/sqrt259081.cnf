@@ -1,3 +1,5 @@
+c This test file is from kissat
+c https://github.com/arminbiere/kissat/blob/master/LICENSE
 p cnf 525 1486
 -10 1 0
 -10 2 0
