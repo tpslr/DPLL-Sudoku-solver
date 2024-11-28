@@ -108,6 +108,10 @@ class Cell {
     }
 
     set value(value: number | undefined) {
+        this.setValue(value);
+    }
+
+    setValue(value: number | undefined, validate = true) {
         if (!value || value == 0) value = undefined;
 
         if (this._value) {
@@ -122,6 +126,7 @@ class Cell {
 
         this.input.value = value?.toString() ?? "";
 
+        if (validate) this.validate(true);
     }
 
     set possible(possible: number[]) {
@@ -447,7 +452,8 @@ async function importClipboard() {
 
     for (const x in board) {
         for (const y in board[x]) {
-            board[x][y].value = result.sudoku[x][y].value ?? undefined;
+            board[x][y].setValue(result.sudoku[x][y].value ?? undefined, false);
+            board[x][y].possible = result.sudoku[x][y].possible;
         }
     }
 
