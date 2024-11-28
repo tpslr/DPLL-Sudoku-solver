@@ -184,6 +184,13 @@ class Cell {
         }
     }
 
+    clear() {
+        this.sure = false;
+        this.error = false;
+        this.setValue(undefined, false);
+        this.possible = Cell.allPossible;
+    }
+
     set sure(sure: boolean) {
         const value = this.value;
         this._sure = sure;
@@ -344,11 +351,7 @@ function clearBoard() {
     for (const x in board) {
         for (const y in board[x]) {
             const cell = board[x][y];
-            cell.sure = false;
-            cell.error = false;
-            cell.value = undefined;
-            cell.possible = Cell.allPossible;
-            cell.updatePossible();
+            cell.clear();
         }
     }
 }
