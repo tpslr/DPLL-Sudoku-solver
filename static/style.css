@@ -7,7 +7,7 @@ body {
     left: 0px;
     height: 100%;
     position: absolute;
-    width: calc(100% - 250px);
+    width: calc(100% - 15rem);
     background-color: gray;
     text-align: center;
 }
@@ -18,17 +18,18 @@ body {
     max-width: calc(100% - 24px);
     max-height: calc(100% - 24px);
     aspect-ratio: 1/1;
-    width: 10000000px;
+    --size: min(calc(100vh - 20px), calc(100vw - 15rem));
+    width: var(--size);
+    font-size: calc(var(--size) / 15);
     margin: 10px;
     background-color: white;
     border: solid black 2px;
-    --size: 9;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
 }
 #ui {
     right: 0px;
-    width: 250px;
+    width: 15rem;
     height: 100%;
     background-color: teal;
     position: absolute;
@@ -40,19 +41,33 @@ div.controls {
 }
 div.cell {
     position: relative;
-    border: solid black 1px;
+    border: solid black 0.03em;
+    outline: solid black 0.01em;
+}
+div.cell {
+    --thick-border: 0.05em;
+}
+@media (max-width: 840px) or (max-height: 620px) {
+    div.cell {
+        --thick-border: 0.07em;
+    }
+}
+@media (max-width: 669px) or (max-height: 450px) {
+    div.cell {
+        --thick-border: 0.08em;
+    }
 }
 div.gridcell-x-left {
-    border-left: solid black 2px;
+    border-left: solid black var(--thick-border);
 }
 div.gridcell-x-right {
-    border-right: solid black 2px;
+    border-right: solid black var(--thick-border);
 }
 div.gridcell-y-top {
-    border-top: solid black 2px;
+    border-top: solid black var(--thick-border);
 }
 div.gridcell-y-bottom {
-    border-bottom: solid black 2px;
+    border-bottom: solid black var(--thick-border);
 }
 div.cell > * {
     position: absolute;
@@ -99,7 +114,7 @@ div.cell > input {
     border: none;
     outline: none;
     border-radius: 0;
-    font-size: 4vw;
+    font-size: 1em;
 }
 div.cell > div {
     font-size: 14px;
