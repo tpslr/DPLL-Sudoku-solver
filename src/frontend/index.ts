@@ -55,7 +55,7 @@ class Cell {
         board[x][y] = this;
         applyNavigationEventHandlers(this.input, x, y, focus => this.focus(focus));
         this.input.oninput = () => {
-            if (this.sure) this.input.value = String(this.value);
+            if (this.sure) this.input.value = this.value?.toString() ?? "";
             if (this.input.value.length > 1) this.input.value = this.input.value.split("")[0];
             if (this.value) {
                 Cell.highlightAllPossible(false, this.value);
@@ -120,8 +120,8 @@ class Cell {
         
         this._value = value;
 
-        this.input.value = String(value) || "";
-        this.validate(true);
+        this.input.value = value?.toString() ?? "";
+
     }
 
     set possible(possible: number[]) {
