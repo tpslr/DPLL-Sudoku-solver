@@ -12,7 +12,7 @@ If you are having issues with the `npm i` step, you might have to run `cd DPLL &
 
 
 ## Usage
-Run the app using `node .` and navigate to `localhost:5001` a web browser
+Run the app using `node .` and navigate to `localhost:5001` a web browser (or specify some other port by adding `--port <number>`)
 
 
 Solve a sudoku from a file by running `node . --solvesudoku <path to file>`  
