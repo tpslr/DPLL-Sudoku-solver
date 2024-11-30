@@ -307,6 +307,11 @@ function applyNavigationEventHandlers(input: HTMLInputElement, x: number, y: num
         focus(false);
     };
     input.onkeydown = (evt) => {
+        if (evt.key == "h") {
+            board[x][y].validate(true);
+            validateUniques();
+            evt.preventDefault();
+        }
         if (evt.ctrlKey && evt.code === "Backspace") {
             board[x][y].sure = false;
             evt.preventDefault();
