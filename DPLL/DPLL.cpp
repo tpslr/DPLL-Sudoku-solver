@@ -19,8 +19,6 @@ uint32_t value64Count;
 uint64_t* solution;
 bool solutionFound;
 
-bool* pureLiteralClauseDiscardCache;
-
 std::mutex runningMutex;
 uint32_t workerCount = 4;
 Worker *workers;
@@ -438,8 +436,6 @@ bool DPLL(std::vector<uint64_t*>& clauses, uint32_t _valueCount, uint64_t* _solu
     uint64_t* literals = new uint64_t[value64Count]();
 
     workers = new Worker[workerCount]();
-
-    pureLiteralClauseDiscardCache = new bool[clauseCount]();
 
     dpllState dpll = {
         0, &clauses, 0, discarded_clauses, visited_literals, literals
