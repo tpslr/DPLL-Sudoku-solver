@@ -3,6 +3,7 @@ import { solveCNF } from "./cnf.js";
 
 import { parseSudoku, simplifySudoku } from "./sudokuParser.js";
 import { printSudoku, solveSudoku, Sudoku } from "./sudoku.js";
+import assert from "node:assert";
 
 import express from "express";
 import bodyParser from "body-parser";
@@ -32,6 +33,10 @@ app.post("/parse", bodyParser.text(), (req, res) => {
     }
 });
 
+
+const opts = {
+    port: 5000,
+};
 
 
 for (let i = 0; i < process.argv.length; i++) {
@@ -83,11 +88,22 @@ for (let i = 0; i < process.argv.length; i++) {
         }
         
         process.exit();
+    } else if (arg === "--port") {
+        const nextArg = process.argv[++i];
+
+        assert(!!nextArg, "Missing a port number after --port");
+        assert(nextArg.match(/^\d{1,5}$/g), "Port must be an integer with lengh (1-5)");
+
+        const port = parseInt(nextArg);
+
+        assert(port <= 65535 && port > 0, "Port must be in the range (1-65535)");
+
+        opts.port = port;
     }
 }
 
 
-const server = app.listen(5001, () => {
+const server = app.listen(opts.port, () => {
     let address = server.address();
     if (typeof address === "object" && address !== null) {
         address = `http://localhost:${address.port}`;
