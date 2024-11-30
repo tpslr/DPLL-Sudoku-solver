@@ -10,6 +10,9 @@
 
 If you are having issues with the `npm i` step, you might have to run `cd DPLL && npm i && npm run build && cd .. && npm i`, some things don't yet install properly depending on which OS and C++ compiler you have
 
+### Note for installation on Windows
+You need to have Visual Studio > 2017 with C++ build support (or microsoft build tools) installed for the C++ parts to compile
+
 
 ## Usage
 Run the app using `node .` and navigate to `localhost:5001` a web browser (or specify some other port by adding `--port <number>`)
