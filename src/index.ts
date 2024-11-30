@@ -43,7 +43,7 @@ for (let i = 0; i < process.argv.length; i++) {
     const arg = process.argv[i];
     if (arg === "--solvecnf") {
         const cnfFile = process.argv[++i];
-        console.log(solveCNF(cnfFile));
+        console.log(await solveCNF(cnfFile));
         process.exit();
     } else if (arg === "--solvesudoku") {
         const nextArg = process.argv[++i];
