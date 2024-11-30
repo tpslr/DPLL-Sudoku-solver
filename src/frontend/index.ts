@@ -423,6 +423,9 @@ function clearBoard() {
 function init() {
     genBoard();
 
+    /* eslint-disable no-sparse-arrays */
+    /* eslint-disable @stylistic/js/array-bracket-spacing */
+    /* eslint-disable @stylistic/js/comma-spacing */
     loadArray([
         [ , , ,9,1, , , , ],
         [9, , ,6, , ,3, , ],
@@ -432,8 +435,12 @@ function init() {
         [2, , , , ,1,4, ,7],
         [1, ,2, ,7, ,6, , ],
         [ , ,4, , , ,2,9, ],
-        [ , , , ,6, , , , ]])
+        [ , , , ,6, , , , ]
+    ]);
     board[0][0].select();
+    /* eslint-enable no-sparse-arrays */
+    /* eslint-enable @stylistic/js/array-bracket-spacing */
+    /* eslint-enable @stylistic/js/comma-spacing */
 }
 init();
 
