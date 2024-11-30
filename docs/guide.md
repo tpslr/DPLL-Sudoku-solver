@@ -29,6 +29,19 @@ You can run the tests using `npm test`.
 You can generate the test coverage report by running `./coverage.sh` (this requires you to be using linux and having g++ and gcov installed)
 
 
+## WebUI instructions
+Import a new sudoku from clipboard using the `import from keyboard` button.
+
+Use the `set sure` button to set all current values as "sure" values (the starting values of the sudoku).  
+(You would use this if you've manually entered a sudoku in, and doing this is not required for solving to work, it's purely a UI change)
+
+To undo a "sure" value, press <kbd>Shift</kbd> + <kbd>Backspace</kbd>.
+
+Navigate the Sudoku grid by clicking on the squares, using arrow keys, or using tab.
+
+Add/Remove candidate values using <kbd>Shift</kbd> + Number keys.
+
+
   
 ---
-might not run on Windows.
+*should* not run on Windows, still a tiny bit unsure.
