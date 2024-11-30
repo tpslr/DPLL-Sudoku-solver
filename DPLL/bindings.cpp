@@ -15,7 +15,6 @@ static Napi::Value Entrypoint(const Napi::CallbackInfo& info) {
     for (uint32_t i = 0; i < len; ++i) {
         clauses.emplace_back(buffers.Get(i).As<Napi::Buffer<uint64_t>>().Data());
     }
-    uint32_t clauseCount = clauses.size();
 
     uint32_t valueCount = info[0].As<Napi::Number>().Int32Value();
     uint32_t value64Count = ((valueCount - 1) >> 6) + 1;

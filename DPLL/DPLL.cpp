@@ -134,7 +134,7 @@ inline void cleanupState(dpllState *state) {
     free(state->discardedClauses);
     free(state->literals);
     free(state->visitedLiterals);
-    free(state);
+    delete state;
 }
 
 inline uint32_t chooseLiteral(dpllState& state) {
@@ -162,7 +162,7 @@ inline DPLLOperationResult unitPropagate(dpllState &state) {
 
         uint32_t literalCount = 0;
         uint32_t unitPart = -1;
-        uint32_t unitOffset;
+        uint32_t unitOffset = 0;
         for (uint32_t part = 0; part < value64Count; ++part) {
             // skip clauses that don't include anything in this range
             if (clause[part * 2] == 0) continue;
@@ -305,7 +305,7 @@ bool solve(dpllState &state) {
 
 
     uint32_t literal = chooseLiteral(state);
-    if (literal == -1) {
+    if (literal == -1u) {
         return false;
     }
 
