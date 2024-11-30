@@ -10,12 +10,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sudoku Solver</title>
     <script defer type="module">
-        import { clearBoard, setSure, solve, importClipboard, importFile } from "./index.js";
+        import { clearBoard, setSure, solve, importClipboard, importFile, hideUniques } from "./index.js";
         window.clearBoard = clearBoard;
         window.setSure = setSure;
         window.solve = solve;
         window.importClipboard = importClipboard;
         window.importFile = importFile;
+        window.hideUniques = hideUniques;
     </script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -33,6 +34,10 @@
             <br>
             <br>
             <button onclick="importClipboard()">Import from clipboard</button>
+            <br>
+            <br>
+            <input id="remove-unique" type="checkbox" onchange="hideUniques(this.checked)">
+            <label for="remove-unique">Hide candidates for uniques</label>
             <!--<br>
             <br>
             <label for="import-file">Select file to import</label>

@@ -9,6 +9,8 @@ let selector: HTMLDivElement;
 
 const boardSize = 9;
 
+let hideUniqueValues = false;
+
 
 class Cell {
     readonly x: number;
@@ -23,6 +25,8 @@ class Cell {
 
     private _possible: number[];
 
+    private uniques: number[] | undefined;
+    
     elem: HTMLDivElement;
 
     private input: HTMLInputElement;
@@ -69,6 +73,8 @@ class Cell {
             }
             Cell.semifocusAllOfValue(true, this.value);
             Cell.highlightAllPossible(true, this.value);
+
+            validateUniques();
         };
     }
 
@@ -138,6 +144,28 @@ class Cell {
         return this._possible;
     }
 
+    getUniques(cells: Cell[], uniques: number[]) {
+        uniques.push(...Cell.allPossible.filter(value => {
+            return cells.find(cell => cell !== this && cell.possible.includes(value) && (!cell.value || cell.value === value)) === undefined;
+        }).filter(val => !uniques.includes(val)));
+    }
+
+    validateUniques() {
+        this.uniques = [];
+
+        this.getUniques(this.myRow, this.uniques);
+        this.getUniques(this.myColumn, this.uniques);
+        this.getUniques(this.mySquare, this.uniques);
+
+        if (this.uniques.length > 1) {
+            this.error = true;
+        }
+        if (this.uniques.length === 0) {
+            this.uniques = undefined;
+        }
+        this.updatePossible();
+    }
+
     validate(propagate: boolean) {
         if (this.value && !this.possible.includes(this.value)) {
             this.error = true;
@@ -147,6 +175,7 @@ class Cell {
 
         if (!this.sure) {
             this.possible = Cell.allPossible;
+            this.uniques = undefined;
         }
 
         this.myNeighbors.forEach(neighbor => {
@@ -172,7 +201,16 @@ class Cell {
 
     updatePossible() {
         const possible = this.possible.map(value => {
-            return `<text x="${(value - 1) % 3 * 16 + 8}" y="${Math.floor((value - 1) / 3) * 16 + 8}" dy="12px">${value}</text>`;
+            const gray = this.uniques !== undefined && !this.uniques.includes(value);
+
+            const xPosition = (value - 1) % 3 * 16 + 8;
+            const yPosition = Math.floor((value - 1) / 3) * 16 + 8;
+
+            const colour = gray
+                ? "#A0A0A0"
+                : "#000000";
+
+            return `<text x="${xPosition}" y="${yPosition}" dy="12px" fill="${colour}">${value}</text>`;
         });
 
         const content = `<svg viewBox="0 0 58 58">${possible.join()}</svg>`;
@@ -193,6 +231,7 @@ class Cell {
         this.sure = false;
         this.error = false;
         this.setValue(undefined, false);
+        this.uniques = undefined;
         this.possible = Cell.allPossible;
     }
 
@@ -363,6 +402,15 @@ async function validateValues() {
     validateUniques();
 }
 
+async function validateUniques() {
+    if (hideUniqueValues) for (const row of board) {
+        for (const cell of row) {
+            cell.validateUniques();
+        }
+        await new Promise(res => requestAnimationFrame(res));
+    }
+}
+
 function clearBoard() {
     for (const x in board) {
         for (const y in board[x]) {
@@ -446,6 +494,15 @@ function displaySolvingStats(result: SudokuSolveResult) {
             : "UNSATISFIABLE"}`;
 }
 
+async function hideUniques(value: boolean) {
+    hideUniqueValues = value;
+    if (value) {
+        validateUniques();
+    } else {
+        validateValues();
+    }
+}
+
 async function importClipboard() {
     const text = await navigator.clipboard.readText();
 
@@ -480,4 +537,4 @@ async function importFile() {
 
 }
 
-export { clearBoard, setSure, solve, importClipboard, importFile };
+export { clearBoard, setSure, solve, importClipboard, importFile, hideUniques };
