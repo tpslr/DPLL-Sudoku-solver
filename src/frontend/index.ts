@@ -430,11 +430,14 @@ function displaySolvingStats(result: SudokuSolveResult) {
 
     const numberFormatter = Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
 
+    const totalTime = numberFormatter.format(result.conversionTime + result.parsingTime + result.solvingTime);
+
     const conversionTime = numberFormatter.format(result.conversionTime);
     const parsingTime = numberFormatter.format(result.parsingTime);
     const solvingTime = numberFormatter.format(result.solvingTime);
 
     statsElem.innerHTML = `<h4>Solving statistics</h4>
+        Total time         ${totalTime}ms<br>
         Sudoku conversion: ${conversionTime}ms<br>
         CNF parsing:       ${parsingTime}ms<br>
         Solving:           ${solvingTime}ms<br>
