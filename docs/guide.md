@@ -41,6 +41,9 @@ Navigate the Sudoku grid by clicking on the squares, using arrow keys, or using 
 
 Add/Remove candidate values using <kbd>Shift</kbd> + Number keys.
 
+Use the `Hide candidates for uniques` to hide candidate values if there's only one position in a row/column/square where that value can go.
+(GUI only, makes no difference in solving)  
+This will also make the program catch more errors while entering a sudoku.
 
   
 ---
