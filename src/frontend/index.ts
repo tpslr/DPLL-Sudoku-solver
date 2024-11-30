@@ -352,6 +352,17 @@ function setSure() {
     }
 }
 
+async function validateValues() {
+    for (const x in board) {
+        for (const y in board[x]) {
+            const cell = board[x][y];
+            cell.validate(true);
+            await new Promise(res => requestAnimationFrame(res));
+        }
+    }
+    validateUniques();
+}
+
 function clearBoard() {
     for (const x in board) {
         for (const y in board[x]) {
@@ -458,6 +469,8 @@ async function importClipboard() {
     }
 
     setSure();
+
+    validateValues();
 }
 
 async function importFile() {
