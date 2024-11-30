@@ -130,16 +130,7 @@ inline dpllState* copyState(dpllState& state) {
         state.lastLiteral, state.clauses, state.discardedClausesCount, discarded_clauses, visited_literals, literals
     };
 }
-// Copy state from source to an existing destination state
-inline void copyState(dpllState& source, dpllState &destination) {
-    memcpy(destination.discardedClauses, source.discardedClauses, clauseCount);
-    memcpy(destination.visitedLiterals, source.visitedLiterals, value64Count * sizeof(uint64_t));
-    memcpy(destination.literals, source.literals, value64Count * sizeof(uint64_t));
 
-    destination.lastLiteral = source.lastLiteral;
-    destination.discardedClausesCount = source.discardedClausesCount;
-    destination.clauses = source.clauses;
-}
 
 inline void cleanupState(dpllState *state) {
     free(state->discardedClauses);
