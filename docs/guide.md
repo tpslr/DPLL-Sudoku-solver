@@ -45,6 +45,8 @@ Use the `Hide candidates for uniques` to hide candidate values if there's only o
 (GUI only, makes no difference in solving)  
 This will also make the program catch more errors while entering a sudoku.
 
+Revalidate a sudoku cell by pressing <kbd>h</kbd> (mostly shouldn't be needed)
+
   
 ---
 *should* not run on Windows, still a tiny bit unsure.
