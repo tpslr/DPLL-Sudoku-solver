@@ -12,7 +12,8 @@ function parseCNF(cnf: string) {
     const variableCount = parseInt(metadata[1]);
     const clauseCount = parseInt(metadata[2]);
 
-    const clauseLen = ((((variableCount >> 6) + 1) << 6)) * 2;
+    // eslint-disable-next-line @stylistic/js/no-extra-parens
+    const clauseLen = (((variableCount >> 6) + 1) << 6) * 2;
 
     const lines = cnf.split(/\r\n|\r|\n/g);
 
