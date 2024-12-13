@@ -1,6 +1,6 @@
 import DPLL from "DPLL";
 import { parseCNF, parseSolution } from "./cnf.js";
-import { SudokuCNFConverter } from "./sudokuCnfConverter.js";
+import { SudokuCnfBufferConverter, SudokuCNFConverter } from "./sudokuCnfConverter.js";
 import { performance } from "perf_hooks";
 
 interface SudokuCell {
@@ -46,13 +46,15 @@ type SudokuSolveResult = ({
  */
 function solveSudoku(sudoku: Sudoku): SudokuSolveResult {    
     performance.mark("start");
-    const sudokuConverter = new SudokuCNFConverter(sudoku);
+    const sudokuConverter = new SudokuCnfBufferConverter(sudoku);
+
+    //  const converter2 = new SudokuCnfBufferConverter(sudoku);
     
-    const cnfString = sudokuConverter.convert();
+    //  const cnfString = sudokuConverter.convert();
 
     performance.mark("sudoku converted");
 
-    const cnf = parseCNF(cnfString);
+    const cnf = sudokuConverter.convertToBuffer();
 
     performance.mark("cnf parsed");
 

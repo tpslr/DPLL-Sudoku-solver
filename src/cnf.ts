@@ -101,5 +101,7 @@ async function solveCNF(path: string) {
 export {
     parseCNF,
     parseSolution,
-    solveCNF
+    solveCNF,
+    setBufferSymbol,
+    getBufferSymbol
 };

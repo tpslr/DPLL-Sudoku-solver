@@ -1,5 +1,13 @@
+import { basename } from "path";
+import { setBufferSymbol } from "./cnf.js";
 import type { Sudoku } from "./sudoku.js";
 
+type Su = {
+    useBuffer: true,
+    cnfBuffer: Buffer[],
+} | {
+    useBuffer: false
+}
 
 class SudokuCNFConverter {
     // number of literals in the generated cnf
@@ -24,12 +32,15 @@ class SudokuCNFConverter {
      */
     readonly sudoku: Sudoku;
 
+    cnfString: string;
+
     constructor(sudoku: Sudoku) {
         this.sudoku = sudoku;
         this.literalCount = 0;
         this.clauseCount = 0;
         this.posLiteralCache = new Map();
         this.literalPosCache = new Map();
+        this.cnfString = "";
     }
 
     /**
@@ -60,15 +71,14 @@ class SudokuCNFConverter {
      * @returns Partial CNF string
      */
     createXOR(literals: number[]) {
-        let out = literals.join(" ") + " 0\n";
+        this.cnfString += literals.join(" ") + " 0\n";
         this.clauseCount++;
         for (let i = 0; i < literals.length; i++) {
             for (let ii = i + 1; ii < literals.length; ii++) {
-                out += `-${literals[i]} -${literals[ii]} 0\n`;
+                this.cnfString += `-${literals[i]} -${literals[ii]} 0\n`;
                 this.clauseCount++;
             }
         }
-        return out;
     }
 
     /**
@@ -82,14 +92,14 @@ class SudokuCNFConverter {
      * @returns CNF in string form
      */
     convert() {
-        let cnf = "";
+        this.cnfString = "";
         // cells
         for (let row = 0; row < 9; row++) {
             for (let col = 0; col < 9; col++) {
                 const cell = this.sudoku[row][col];
                 if (cell.value) continue;
-                cnf += `c Values for cell ${row + 1}, ${col + 1}\n`;
-                cnf += this.createXOR(cell.possible.map(value => this.posToLiteral(row, col, value - 1))) + "\n";
+                this.cnfString += `c Values for cell ${row + 1}, ${col + 1}\n`;
+                this.createXOR(cell.possible.map(value => this.posToLiteral(row, col, value - 1)));
             }
         }
         // rows
@@ -105,8 +115,8 @@ class SudokuCNFConverter {
                 }
                 if (cols.length == 0) continue;
 
-                cnf += `c Values for row ${rowN + 1}, num=${value + 1}\n`;
-                cnf += this.createXOR(cols.map(col => this.posToLiteral(rowN, col, value))) + "\n";
+                this.cnfString += `c Values for row ${rowN + 1}, num=${value + 1}\n`;
+                this.createXOR(cols.map(col => this.posToLiteral(rowN, col, value)));
             }
         }
         // columns
@@ -120,8 +130,8 @@ class SudokuCNFConverter {
                 }
                 if (rows.length == 0) continue;
 
-                cnf += `c Values for col ${col + 1}, num=${value + 1}\n`;
-                cnf += this.createXOR(rows.map(row => this.posToLiteral(row, col, value))) + "\n";
+                this.cnfString += `c Values for col ${col + 1}, num=${value + 1}\n`;
+                this.createXOR(rows.map(row => this.posToLiteral(row, col, value)));
             }
         }
         // squares
@@ -141,12 +151,12 @@ class SudokuCNFConverter {
                 }
                 if (squareLiterals.length == 0) continue;
 
-                cnf += `c Values for square ${square + 1}, num=${value + 1}\n`;
-                cnf += this.createXOR(squareLiterals) + "\n";
+                this.cnfString += `c Values for square ${square + 1}, num=${value + 1}\n`;
+                this.createXOR(squareLiterals);
             }
         }
 
-        return `p cnf ${this.literalCount} ${this.clauseCount}\n` + cnf;
+        return `p cnf ${this.literalCount} ${this.clauseCount}\n` + this.cnfString;
     }
 
     /**
@@ -169,4 +179,66 @@ class SudokuCNFConverter {
     }
 }
 
-export { SudokuCNFConverter };
+class SudokuCnfBufferConverter extends SudokuCNFConverter {
+    readonly cnfBuffers: Buffer[];
+
+    readonly bufferSize: number;
+
+    constructor(sudoku: Sudoku) {
+        super(sudoku);
+        this.cnfBuffers = [];
+
+        let literalCount = 0;
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                const cell = this.sudoku[row][col];
+                literalCount += cell.possible.length;
+            }
+        }
+        console.log(literalCount);
+        this.bufferSize = Math.ceil(literalCount / 64) * 2 * 8;
+    }
+
+    static setLiteral(buffer: Buffer, literal: number, negate: boolean) {
+        const index64 = literal - 1 >> 6 << 6;
+        const start = index64 * 2;
+        const offset = literal - 1 & 63;
+
+        setBufferSymbol(buffer, start + offset, true);
+        setBufferSymbol(buffer, start + offset + 64, negate);
+    }
+
+    override createXOR(literals: number[]) {
+        const orBuffer = Buffer.alloc(this.bufferSize);
+
+        for (const literal of literals) {
+            SudokuCnfBufferConverter.setLiteral(orBuffer, literal, false);
+        }
+
+        this.cnfBuffers.push(orBuffer);
+        
+        this.cnfString += literals.join(" ") + " 0\n";
+        this.clauseCount++;
+        for (let i = 0; i < literals.length; i++) {
+            for (let ii = i + 1; ii < literals.length; ii++) {
+                const nandBuffer = Buffer.alloc(this.bufferSize);
+                SudokuCnfBufferConverter.setLiteral(nandBuffer, literals[i], true);
+                SudokuCnfBufferConverter.setLiteral(nandBuffer, literals[ii], true);
+                this.cnfBuffers.push(nandBuffer);
+                this.clauseCount++;
+            }
+        }
+    }
+
+    convertToBuffer() {
+        super.convert();
+        console.log(this.literalCount);
+        return {
+            clauses: this.cnfBuffers,
+            clauseCount: this.clauseCount,
+            variableCount: this.literalCount
+        };
+    }
+}
+
+export { SudokuCNFConverter, SudokuCnfBufferConverter };
