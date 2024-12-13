@@ -9,7 +9,9 @@ function checkSudoku(sudoku: Sudoku, solution: string) {
     for (let row = 0; row < 9; row++) {
         const solutionRow = solutionRows[row].split("");
         for (let col = 0; col < 9; col++) {
-            const solutionValue = parseInt(solutionRow[col]);
+            const solutionValue = solutionRow[col] !== "."
+                ? parseInt(solutionRow[col])
+                : null;
             assert.strictEqual(sudoku[row][col].value, solutionValue, `Value at row ${row + 1} col ${col + 1} Should be ${solutionValue}`);
         }
     }
@@ -27,3 +29,5 @@ test("sudoku/solveSudoku", () => {
     solveSudoku(sudoku2);
     checkSudoku(sudoku2, solution2);
 });
+
+export { checkSudoku };
