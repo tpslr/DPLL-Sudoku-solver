@@ -81,9 +81,7 @@ test("SudokuCNFConverter/convert", () => {
 
     const expectedLines = ["p cnf 9 64", "c Values for cell 1, 1", "1 2 3 4 5 6 7 8 9 0"];
 
-    if (CNF.length < expectedLines.length) {
-        assert.fail("Resulting CNF should have at least as many lines as expected output");
-    }
+    assert(expectedLines.length < CNF.length, "Resulting CNF should have at least as many lines as expected output");
 });
 
 test("SudokuCNFConverter/parseResult", () => {
