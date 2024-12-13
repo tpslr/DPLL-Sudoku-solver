@@ -443,6 +443,10 @@ bool DPLL(std::vector<uint64_t*>& clauses, uint32_t _valueCount, uint64_t* _solu
 
     bool result = solve(dpll);
 
+    delete[] discarded_clauses;
+    delete[] visited_literals;
+    delete[] literals;
+
     // Kill all workers since they could still be running on other branches
     for (uint32_t i = 0; i < workerCount; ++i) {
         auto worker = (workers + i);
