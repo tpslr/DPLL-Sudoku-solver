@@ -4,7 +4,8 @@
   "main": "./dist/index.js",
   "type": "module",
   "scripts": {
-    "test": "node --enable-source-maps ./dist/test.js"
+    "test": "node --enable-source-maps ./dist/test.js",
+    "coverage": "node --test --enable-source-maps --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=jscoverage.info"
   },
   "author": "Topias Lyyra",
   "license": "",

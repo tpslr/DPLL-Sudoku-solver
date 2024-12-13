@@ -21,13 +21,15 @@ cd ../..
 echo "Running tests"
 export NODE_ENV=development 
 export COVERAGE=true
-npm test
+npm run coverage
 
 echo "Generating coverate report"
 gcov DPLL.cpp -r -o ./DPLL/build/coverage/obj.target/DPLL
 lcov --capture --directory . --output-file coverage.info
 rm *.cpp.gcov
-genhtml coverage.info --output-directory coverage
+genhtml coverage.info jscoverage.info --output-directory coverage
 rm coverage.info
+rm jscoverage.info
 
 echo "Done"
+echo "Coverage reports can be found in \"./coverage\""
