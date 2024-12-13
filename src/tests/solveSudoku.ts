@@ -28,6 +28,9 @@ test("sudoku/solveSudoku", () => {
     const solution2 = "693784512\n487512936\n125963874\n932651487\n568247391\n741398625\n319475268\n856129743\n274836159";
     solveSudoku(sudoku2);
     checkSudoku(sudoku2, solution2);
+
+    const sudoku3 = parseSudoku("9......1.\n4........\n.2.......\n....5.4.7\n..8...3..\n..1.9....\n3..4..2..\n.5.1.....\n...8.6...").sudoku;
+    assert.strictEqual(solveSudoku(sudoku3).satisfiable, false, "Unsolvable sudoku shouldn't be satisfiable");
 });
 
 export { checkSudoku };
