@@ -25,7 +25,8 @@ npm run coverage
 
 echo "Generating coverate report"
 gcov DPLL.cpp -r -o ./DPLL/build/coverage/obj.target/DPLL
-lcov --capture --directory . --output-file coverage.info
+lcov --capture --directory . --output-file coverage.info --no-external
+lcov --remove coverage.info --output-file coverage.info "*DPLL/node_modules/*"
 rm *.cpp.gcov
 genhtml coverage.info jscoverage.info --output-directory coverage
 rm coverage.info
