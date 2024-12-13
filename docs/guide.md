@@ -33,7 +33,8 @@ You can generate the test coverage report by running `./coverage.sh` (this requi
 
 
 ## WebUI instructions
-Import a new sudoku from clipboard using the `import from keyboard` button.
+Import a new sudoku from clipboard using the `import from keyboard` button.  
+Most commonly used sudoku formats are supported, one tool you can use to generate sudokus is [qqwing](https://qqwing.com/generate.html).
 
 Use the `set sure` button to set all current values as "sure" values (the starting values of the sudoku).  
 (You would use this if you've manually entered a sudoku in, and doing this is not required for solving to work, it's purely a UI change)
