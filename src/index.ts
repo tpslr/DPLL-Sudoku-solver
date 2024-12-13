@@ -3,6 +3,9 @@ import { solveCNF } from "./cnf.js";
 
 import { parseSudoku, simplifySudoku } from "./sudokuParser.js";
 import { printSudoku, solveSudoku, Sudoku } from "./sudoku.js";
+
+import { resolve as resolvePath } from "path";
+
 import assert from "node:assert";
 
 import express from "express";
@@ -14,6 +17,12 @@ app.use(express.static("./static"));
 
 app.get("/index.js", (req, res) => {
     res.sendFile("./frontend/index.js", { root: import.meta.dirname });
+});
+app.get("/index.js.map", (req, res) => {
+    res.sendFile("./frontend/index.js.map", { root: import.meta.dirname });
+});
+app.get("/src/frontend/index.ts", (req, res) => {
+    res.sendFile("./src/frontend/index.ts", { root: resolvePath(import.meta.dirname, "..") });
 });
 
 app.post("/solve", bodyParser.json(), (req, res) => {
