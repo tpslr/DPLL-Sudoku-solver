@@ -9,10 +9,10 @@
   - Test coverage for the parser is 100%
 
 * Sudoku parser and Sudoku => CNF converter are tested with unit tests
-  - Test coverage of used code for these is 100%, allthough there is some currently unused code that isn't tested, bringing the total coverage for the sudoku parser to 94.7%.
+  - Test coverage of used code for these is 100%, allthough there is some currently unused code that isn't tested, bringing the total coverage for the Sudoku parser to 94.7%.
 
 
-In addition to these, there are additional tests which test solving a sudoku end-to-end and verify that it's solved correctly.
+In addition to these, there are additional tests which test solving a Sudoku end-to-end and verify that it's solved correctly.
 
 The GUI or CLI code is not tested in any way.
 
