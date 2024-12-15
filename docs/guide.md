@@ -3,7 +3,7 @@
 
 ## Installation
 * clone the repository
-* install NodeJS (I've tested using node 20.17.0 and 22.11.0 but anything >20 should work)
+* install NodeJS (I've tested using node 20.17.0 and 22.11.0 but anything >20 should work). Using NodeJS >=22 is recommended as coverage doesn't quite work right on 20.
 * install some C++ compiler that node-gyp supports (g++, msvc, etc)
 * `npm i`
 * `tsc` (if you don't have typescript globally installed, it should be under node_modules/typescript/bin/tsc)
