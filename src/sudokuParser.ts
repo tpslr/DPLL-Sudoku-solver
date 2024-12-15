@@ -118,7 +118,7 @@ function parseSudoku(data: string, lax = false): SudokuParseResult {
             format,
             lax
         };
-    } else if (format === "unknown") {
+    } else {
         // Replace out everything that's probably not part of the data
         // eslint-disable-next-line no-useless-escape
         data = data.replace(/[^A-Za-z0-9*_\.]/g, "");
@@ -134,7 +134,6 @@ function parseSudoku(data: string, lax = false): SudokuParseResult {
         }
         return parseSudoku(data, true);
     }
-    throw new Error("Unknown format!");
 }
 
 function createCell(value: string): SudokuCell {
