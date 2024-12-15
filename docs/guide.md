@@ -34,7 +34,7 @@ You can generate the test coverage report by running `./coverage.sh` (this requi
 
 ## WebUI instructions
 Import a new sudoku from clipboard using the `import from keyboard` button.  
-Most commonly used sudoku formats are supported, one tool you can use to generate sudokus is [qqwing](https://qqwing.com/generate.html).
+Most commonly used sudoku formats are supported, a useful tool you can use to generate sudokus is [qqwing](https://qqwing.com/generate.html).
 
 Use the `set sure` button to set all current values as "sure" values (the starting values of the sudoku).  
 (You would use this if you've manually entered a sudoku in, and doing this is not required for solving to work, it's purely a UI change)
@@ -43,7 +43,7 @@ To undo a "sure" value, press <kbd>Shift</kbd> + <kbd>Backspace</kbd>.
 
 Navigate the Sudoku grid by clicking on the squares, using arrow keys, or using tab.
 
-Add/Remove candidate values using <kbd>Shift</kbd> + Number keys.
+Add/Remove candidate values using <kbd>Shift</kbd> + Number keys. (Values set in this way may get reverted when the sudoku is automatically revalidated as you modify values of cells).
 
 Use the `Hide candidates for uniques` to hide candidate values if there's only one position in a row/column/square where that value can go.
 (GUI only, makes no difference in solving)  
